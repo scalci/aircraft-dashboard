@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barrick Aviation | Fleet Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #0A2342; --secondary: #4A90E2; --light-blue: #85C1E9;
+            --pale-blue: #AED6F1; --bg-dark: #0D1B2A; --bg-light: #1B263B;
+            --text-light: #E0E1DD; --grid-color: rgba(74, 144, 226, 0.15);
+        }
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, var(--primary) 100%);
+            color: var(--text-light);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 49px, var(--grid-color) 49px, var(--grid-color) 50px),
+                repeating-linear-gradient(90deg, transparent, transparent 49px, var(--grid-color) 49px, var(--grid-color) 50px);
+            opacity: 0.3;
+            z-index: 0;
+            animation: gridPulse 4s ease-in-out infinite;
+        }
+        @keyframes gridPulse {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 0.4; }
+        }
+        .login-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center; z-index: 1000;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, var(--primary) 100%);
+        }
+        .login-box {
+            background: linear-gradient(135deg, rgba(10, 35, 66, 0.95) 0%, rgba(27, 38, 59, 0.9) 100%);
+            border: 2px solid var(--secondary); border-radius: 20px; padding: 50px;
+            max-width: 450px; width: 90%; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: slideDown 0.5s ease-out;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .login-title {
+            font-family: 'Orbitron', monospace; font-size: 2rem; font-weight: 900;
+            background: linear-gradient(135deg, #70AD47 0%, #FFFFFF 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; letter-spacing: 4px; margin-bottom: 10px; text-align: center;
+        }
+        .login-subtitle { font-size: 1rem; color: var(--light-blue); text-align: center; margin-bottom: 30px; letter-spacing: 2px; }
+        .input-group { margin-bottom: 20px; }
+        .input-label {
+            display: block; font-size: 0.9rem; color: var(--pale-blue);
+            margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;
+        }
+        .pin-input {
+            width: 100%; padding: 15px; background: rgba(13, 27, 42, 0.8);
+            border: 2px solid rgba(74, 144, 226, 0.3); border-radius: 10px;
+            color: var(--text-light); font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem; text-align: center; letter-spacing: 8px; transition: all 0.3s ease;
+        }
+        .pin-input:focus { outline: none; border-color: var(--secondary); box-shadow: 0 0 20px rgba(74, 144, 226, 0.3); }
+        .login-button {
+            width: 100%; padding: 15px;
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--light-blue) 100%);
+            color: white; font-family: 'Orbitron', monospace; font-size: 1rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 2px; border: none; border-radius: 10px;
+            cursor: pointer; transition: all 0.3s ease;
+        }
+        .login-button:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(74, 144, 226, 0.5); }
+        .error-message { color: #FF6B6B; text-align: center; margin-top: 15px; font-size: 0.9rem; display: none; }
+        .content { display: none; max-width: 1400px; margin: 0 auto; padding: 60px 20px; position: relative; z-index: 1; }
+        .header { text-align: center; margin-bottom: 60px; animation: slideDown 0.8s ease-out; }
+        .main-title {
+            font-family: 'Orbitron', monospace; font-size: 3.5rem; font-weight: 900;
+            background: linear-gradient(135deg, #70AD47 0%, #FFFFFF 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; letter-spacing: 8px; margin-bottom: 15px;
+        }
+        .subtitle {
+            font-size: 1.3rem; color: var(--light-blue); letter-spacing: 4px;
+            text-transform: uppercase; font-weight: 600; margin-bottom: 10px;
+        }
+        .aircraft-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        .aircraft-card {
+            background: linear-gradient(135deg, rgba(10, 35, 66, 0.9) 0%, rgba(27, 38, 59, 0.7) 100%);
+            border: 2px solid;
+            border-radius: 20px;
+            padding: 30px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: block;
+        }
+        .aircraft-card:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(74, 144, 226, 0.3); }
+        .aircraft-card.bgm { border-color: #4472C4; }
+        .aircraft-card.bgo { border-color: #ED7D31; }
+        .aircraft-card.cgo { border-color: #70AD47; }
+        .aircraft-card.kgm { border-color: #FFC000; }
+        .aircraft-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .aircraft-name { font-family: 'Orbitron', monospace; font-size: 2rem; font-weight: 700; }
+        .aircraft-card.bgm .aircraft-name { color: #4472C4; }
+        .aircraft-card.bgo .aircraft-name { color: #ED7D31; }
+        .aircraft-card.cgo .aircraft-name { color: #70AD47; }
+        .aircraft-card.kgm .aircraft-name { color: #FFC000; }
+        .aircraft-badge {
+            padding: 8px 16px; border-radius: 20px; font-size: 0.75rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1px; background: rgba(74, 144, 226, 0.2);
+            color: var(--light-blue); border: 1px solid var(--secondary);
+        }
+        .aircraft-info { font-size: 1rem; color: var(--pale-blue); margin-bottom: 10px; line-height: 1.8; }
+        .aircraft-info strong { color: var(--text-light); font-weight: 700; }
+        .aircraft-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 20px; }
+        .stat-box {
+            background: rgba(74, 144, 226, 0.1); padding: 12px; border-radius: 10px;
+            border: 1px solid rgba(74, 144, 226, 0.2);
+        }
+        .stat-label {
+            font-size: 0.8rem; color: var(--pale-blue); text-transform: uppercase;
+            letter-spacing: 1px; margin-bottom: 5px;
+        }
+        .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 1.3rem; font-weight: 700; color: var(--text-light); }
+        .view-buttons { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+        .view-btn {
+            padding: 8px 16px; background: linear-gradient(135deg, var(--secondary) 0%, var(--light-blue) 100%);
+            color: white; font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 1px; border-radius: 15px; text-decoration: none; transition: all 0.3s ease;
+        }
+        .view-btn:hover { transform: scale(1.05); }
+        .logout-btn {
+            position: fixed; top: 20px; right: 20px; padding: 10px 20px;
+            background: rgba(230, 57, 70, 0.8); color: white;
+            font-family: 'Rajdhani', sans-serif; font-size: 0.9rem; font-weight: 600;
+            text-transform: uppercase; border: none; border-radius: 10px; cursor: pointer; z-index: 100;
+        }
+        .logout-btn:hover { background: rgba(230, 57, 70, 1); }
+        .footer {
+            margin-top: 100px; padding-top: 40px; border-top: 1px solid rgba(74, 144, 226, 0.3);
+            text-align: center; font-size: 0.9rem; color: rgba(224, 225, 221, 0.6);
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        @media (max-width: 768px) {
+            .aircraft-name { font-size: 1.5rem; }
+            .main-title { font-size: 2.5rem; letter-spacing: 4px; }
+            .aircraft-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container" id="loginContainer">
+        <div class="login-box">
+            <div class="login-title">BARRICK</div>
+            <div class="login-subtitle">Fleet Portal Access</div>
+            <div class="input-group">
+                <label class="input-label">Enter Access PIN</label>
+                <input type="password" class="pin-input" id="pinInput" maxlength="7" placeholder="● ● ● ● ● ● ●" autocomplete="off">
+            </div>
+            <button class="login-button" onclick="checkPin()">ACCESS PORTAL</button>
+            <div class="error-message" id="errorMessage">✗ Invalid PIN. Please try again.</div>
+        </div>
+    </div>
+    <div class="content" id="content">
+        <button class="logout-btn" onclick="logout()">Logout</button>
+        <div class="logo-container" style="text-align: center; margin-bottom: 30px;">
+            <svg width="280" height="70" viewBox="0 0 300 80" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto;">
+                <circle cx="40" cy="40" r="35" fill="#4A90E2" opacity="0.2"/>
+                <circle cx="40" cy="40" r="32" fill="none" stroke="#4A90E2" stroke-width="2"/>
+                <g transform="translate(40, 40)">
+                    <path d="M -8 -4 L 8 0 L -8 4 Z" fill="#4A90E2"/>
+                    <path d="M -12 -8 L -4 -2 L -4 2 L -12 8 L -10 0 Z" fill="#85C1E9"/>
+                    <circle cx="0" cy="0" r="2" fill="#FFFFFF"/>
+                </g>
+                <text x="85" y="45" font-family="'Orbitron', Arial, sans-serif" font-size="28" font-weight="900" fill="url(#blueGradient)">FlyWatch</text>
+                <text x="235" y="45" font-family="'Orbitron', Arial, sans-serif" font-size="28" font-weight="900" fill="#4A90E2">.AI</text>
+                <text x="85" y="62" font-family="'Rajdhani', Arial, sans-serif" font-size="11" font-weight="600" fill="#85C1E9" letter-spacing="2">AVIATION MANAGEMENT SOLUTION</text>
+                <defs>
+                    <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:#4472C4;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#85C1E9;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+            </svg>
+        </div>
+        <div class="header">
+            <div class="main-title">BARRICK AVIATION</div>
+            <div class="subtitle">Fleet Management Portal</div>
+        </div>
+        <div class="aircraft-grid">
+            <div class="aircraft-card bgm">
+                <div class="aircraft-header">
+                    <div class="aircraft-name">ZS-BGM</div>
+                    <div class="aircraft-badge">Active</div>
+                </div>
+                <div class="aircraft-info">
+                    <strong>Model:</strong> Beechcraft King Air<br>
+                    <strong>Status:</strong> All systems operational
+                </div>
+                <div class="aircraft-stats">
+                    <div class="stat-box">
+                        <div class="stat-label">Total Flights</div>
+                        <div class="stat-value">194</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Avg ITT</div>
+                        <div class="stat-value">697°C</div>
+                    </div>
+                </div>
+                <div class="view-buttons">
+                    <a href="ZS-BGM_A4_infographic.html" class="view-btn">📄 A4 Summary</a>
+                    <a href="barrick_ZS-BGM_infographic.html" class="view-btn">📊 TREND Charts</a>
+                </div>
+            </div>
+            <div class="aircraft-card bgo">
+                <div class="aircraft-header">
+                    <div class="aircraft-name">ZS-BGO</div>
+                    <div class="aircraft-badge">Active</div>
+                </div>
+                <div class="aircraft-info">
+                    <strong>Model:</strong> Beechcraft King Air<br>
+                    <strong>Status:</strong> All systems operational
+                </div>
+                <div class="aircraft-stats">
+                    <div class="stat-box">
+                        <div class="stat-label">Total Flights</div>
+                        <div class="stat-value">108</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Avg ITT</div>
+                        <div class="stat-value">701°C</div>
+                    </div>
+                </div>
+                <div class="view-buttons">
+                    <a href="ZS-BGO_A4_infographic.html" class="view-btn">📄 A4 Summary</a>
+                    <a href="barrick_ZS-BGO_infographic.html" class="view-btn">📊 TREND Charts</a>
+                </div>
+            </div>
+            <div class="aircraft-card cgo">
+                <div class="aircraft-header">
+                    <div class="aircraft-name">ZS-CGO</div>
+                    <div class="aircraft-badge">Active</div>
+                </div>
+                <div class="aircraft-info">
+                    <strong>Model:</strong> Beechcraft King Air<br>
+                    <strong>Status:</strong> All systems operational
+                </div>
+                <div class="aircraft-stats">
+                    <div class="stat-box">
+                        <div class="stat-label">Total Flights</div>
+                        <div class="stat-value">1,462</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Avg ITT</div>
+                        <div class="stat-value">727°C</div>
+                    </div>
+                </div>
+                <div class="view-buttons">
+                    <a href="ZS-CGO_A4_infographic.html" class="view-btn">📄 A4 Summary</a>
+                    <a href="barrick_ZS-CGO_infographic.html" class="view-btn">📊 TREND Charts</a>
+                </div>
+            </div>
+            <div class="aircraft-card kgm">
+                <div class="aircraft-header">
+                    <div class="aircraft-name">ZS-KGM</div>
+                    <div class="aircraft-badge">Active</div>
+                </div>
+                <div class="aircraft-info">
+                    <strong>Model:</strong> Textron Cessna Caravan 208<br>
+                    <strong>Status:</strong> All systems operational
+                </div>
+                <div class="aircraft-stats">
+                    <div class="stat-box">
+                        <div class="stat-label">Total Flights</div>
+                        <div class="stat-value">905</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Avg ITT</div>
+                        <div class="stat-value">693°C</div>
+                    </div>
+                </div>
+                <div class="view-buttons">
+                    <a href="ZS-KGM_A4_infographic.html" class="view-btn">📄 A4 Summary</a>
+                    <a href="barrick_ZS-KGM_infographic.html" class="view-btn">📊 TREND Charts</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer">
+            <div>Barrick Aviation Fleet Management | FlyWatch AI Monitoring</div>
+        </div>
+    </div>
+    <script>
+        const CORRECT_PIN = 'FLEET24';
+        if (sessionStorage.getItem('barrick_auth') === 'true') { showContent(); }
+        document.getElementById('pinInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') { checkPin(); }
+        });
+        function checkPin() {
+            const enteredPin = document.getElementById('pinInput').value;
+            const errorMessage = document.getElementById('errorMessage');
+            if (enteredPin === CORRECT_PIN) {
+                sessionStorage.setItem('barrick_auth', 'true');
+                showContent();
+            } else {
+                errorMessage.style.display = 'block';
+                document.getElementById('pinInput').value = '';
+                document.getElementById('pinInput').focus();
+                document.querySelector('.login-box').style.animation = 'shake 0.5s';
+                setTimeout(() => { document.querySelector('.login-box').style.animation = ''; }, 500);
+            }
+        }
+        function showContent() {
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+        }
+        function logout() {
+            sessionStorage.removeItem('barrick_auth');
+            document.getElementById('loginContainer').style.display = 'flex';
+            document.getElementById('content').style.display = 'none';
+            document.getElementById('pinInput').value = '';
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
