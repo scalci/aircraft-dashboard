@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlyWatch.AI | Aircraft Portal Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0A2342;
+            --secondary: #4A90E2;
+            --light-blue: #85C1E9;
+            --pale-blue: #AED6F1;
+            --bg-dark: #0D1B2A;
+            --bg-light: #1B263B;
+            --text-light: #E0E1DD;
+            --grid-color: rgba(74, 144, 226, 0.15);
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, var(--primary) 100%);
+            color: var(--text-light);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 49px, var(--grid-color) 49px, var(--grid-color) 50px),
+                repeating-linear-gradient(90deg, transparent, transparent 49px, var(--grid-color) 49px, var(--grid-color) 50px);
+            opacity: 0.3;
+            z-index: 0;
+            animation: gridPulse 4s ease-in-out infinite;
+        }
+
+        @keyframes gridPulse {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 0.4; }
+        }
+
+        .login-container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+        }
+
+        .logo-container {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: slideDown 0.8s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .logo-svg {
+            max-width: 320px;
+            width: 100%;
+            height: auto;
+            filter: drop-shadow(0 0 30px rgba(74, 144, 226, 0.3));
+        }
+
+        .login-box {
+            background: linear-gradient(135deg, rgba(10, 35, 66, 0.95) 0%, rgba(27, 38, 59, 0.9) 100%);
+            border: 2px solid var(--secondary);
+            border-radius: 20px;
+            padding: 50px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: slideUp 0.8s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .login-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 2.2rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #4472C4 0%, #FFFFFF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 4px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .login-subtitle {
+            font-size: 1rem;
+            color: var(--light-blue);
+            text-align: center;
+            margin-bottom: 35px;
+            letter-spacing: 2px;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 0.9rem;
+            color: var(--pale-blue);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .pin-input {
+            width: 100%;
+            padding: 18px;
+            background: rgba(13, 27, 42, 0.8);
+            border: 2px solid rgba(74, 144, 226, 0.3);
+            border-radius: 12px;
+            color: var(--text-light);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.8rem;
+            text-align: center;
+            letter-spacing: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .pin-input:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 25px rgba(74, 144, 226, 0.4);
+            background: rgba(13, 27, 42, 0.95);
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--light-blue) 100%);
+            color: white;
+            font-family: 'Orbitron', monospace;
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .login-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(74, 144, 226, 0.5);
+        }
+
+        .login-button:active {
+            transform: translateY(-1px);
+        }
+
+        .error-message {
+            color: #FF6B6B;
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.95rem;
+            display: none;
+            animation: shake 0.5s;
+        }
+
+        .info-text {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 0.85rem;
+            color: rgba(224, 225, 221, 0.5);
+            line-height: 1.6;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 0.8rem;
+            color: rgba(224, 225, 221, 0.4);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-15px); }
+            75% { transform: translateX(15px); }
+        }
+
+        @media (max-width: 600px) {
+            .login-box {
+                padding: 35px 25px;
+            }
+            .login-title {
+                font-size: 1.8rem;
+            }
+            .pin-input {
+                font-size: 1.5rem;
+                letter-spacing: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo-container">
+            <svg class="logo-svg" viewBox="0 0 300 80" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="40" cy="40" r="35" fill="#4A90E2" opacity="0.2"/>
+                <circle cx="40" cy="40" r="32" fill="none" stroke="#4A90E2" stroke-width="2"/>
+                <g transform="translate(40, 40)">
+                    <path d="M -8 -4 L 8 0 L -8 4 Z" fill="#4A90E2"/>
+                    <path d="M -12 -8 L -4 -2 L -4 2 L -12 8 L -10 0 Z" fill="#85C1E9"/>
+                    <circle cx="0" cy="0" r="2" fill="#FFFFFF"/>
+                </g>
+                <text x="85" y="45" font-family="'Orbitron', Arial, sans-serif" font-size="28" font-weight="900" fill="url(#blueGradient)">FlyWatch</text>
+                <text x="235" y="45" font-family="'Orbitron', Arial, sans-serif" font-size="28" font-weight="900" fill="#4A90E2">.AI</text>
+                <text x="85" y="62" font-family="'Rajdhani', Arial, sans-serif" font-size="11" font-weight="600" fill="#85C1E9" letter-spacing="2">AVIATION MANAGEMENT SOLUTION</text>
+                <defs>
+                    <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:#4472C4;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#85C1E9;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+            </svg>
+        </div>
+
+        <div class="login-box">
+            <div class="login-title">PORTAL ACCESS</div>
+            <div class="login-subtitle">Enter Your Access Code</div>
+            
+            <div class="input-group">
+                <label class="input-label">Customer PIN</label>
+                <input type="password" class="pin-input" id="pinInput" maxlength="7" placeholder="● ● ● ● ● ●" autocomplete="off">
+            </div>
+            
+            <button class="login-button" onclick="checkPin()">ACCESS DASHBOARD</button>
+            
+            <div class="error-message" id="errorMessage">
+                ✗ Invalid PIN. Please check your access code and try again.
+            </div>
+
+            <div class="info-text">
+                Secure access to your aircraft TREND monitoring and maintenance data
+            </div>
+        </div>
+
+        <div class="footer">
+            FlyWatch.AI | Aviation Management Solution | Secure Portal Access
+        </div>
+    </div>
+
+    <script>
+        // PIN routing configuration
+        const PIN_ROUTES = {
+            'HVM2024': 'highveld-portal.html',
+            'MPT360': 'mccormick-portal.html',
+            'FLEET24': 'barrick-portal.html'
+        };
+
+        // Focus input on load
+        window.onload = function() {
+            document.getElementById('pinInput').focus();
+        };
+
+        // Allow Enter key to submit
+        document.getElementById('pinInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkPin();
+            }
+        });
+
+        function checkPin() {
+            const enteredPin = document.getElementById('pinInput').value.trim();
+            const errorMessage = document.getElementById('errorMessage');
+            
+            // Check if PIN matches any customer
+            if (PIN_ROUTES[enteredPin]) {
+                // Store authentication
+                const customerKey = enteredPin === 'HVM2024' ? 'highveld_auth' :
+                                   enteredPin === 'MPT360' ? 'mccormick_auth' :
+                                   'barrick_auth';
+                sessionStorage.setItem(customerKey, 'true');
+                
+                // Redirect to customer portal
+                window.location.href = PIN_ROUTES[enteredPin];
+            } else {
+                // Show error
+                errorMessage.style.display = 'block';
+                document.getElementById('pinInput').value = '';
+                document.getElementById('pinInput').focus();
+                
+                // Shake animation
+                document.querySelector('.login-box').style.animation = 'shake 0.5s';
+                setTimeout(() => {
+                    document.querySelector('.login-box').style.animation = '';
+                    errorMessage.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        // Auto-hide error after 3 seconds
+        setInterval(function() {
+            const errorMessage = document.getElementById('errorMessage');
+            if (errorMessage.style.display === 'block') {
+                setTimeout(() => {
+                    errorMessage.style.display = 'none';
+                }, 3000);
+            }
+        }, 100);
+    </script>
+</body>
+</html>
