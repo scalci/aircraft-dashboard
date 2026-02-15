@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Highveld Mushrooms | Aircraft Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0A2342;
+            --secondary: #4A90E2;
+            --light-blue: #85C1E9;
+            --pale-blue: #AED6F1;
+            --bg-dark: #0D1B2A;
+            --bg-light: #1B263B;
+            --text-light: #E0E1DD;
+            --grid-color: rgba(74, 144, 226, 0.15);
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, var(--primary) 100%);
+            color: var(--text-light);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 49px, var(--grid-color) 49px, var(--grid-color) 50px),
+                repeating-linear-gradient(90deg, transparent, transparent 49px, var(--grid-color) 49px, var(--grid-color) 50px);
+            opacity: 0.3;
+            z-index: 0;
+            animation: gridPulse 4s ease-in-out infinite;
+        }
+
+        @keyframes gridPulse {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 0.4; }
+        }
+
+        .login-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, var(--primary) 100%);
+        }
+
+        .login-box {
+            background: linear-gradient(135deg, rgba(10, 35, 66, 0.95) 0%, rgba(27, 38, 59, 0.9) 100%);
+            border: 2px solid var(--secondary);
+            border-radius: 20px;
+            padding: 50px;
+            max-width: 450px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: slideDown 0.5s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .login-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 2rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #4472C4 0%, #FFFFFF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 4px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .login-subtitle {
+            font-size: 1rem;
+            color: var(--light-blue);
+            text-align: center;
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 0.9rem;
+            color: var(--pale-blue);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .pin-input {
+            width: 100%;
+            padding: 15px;
+            background: rgba(13, 27, 42, 0.8);
+            border: 2px solid rgba(74, 144, 226, 0.3);
+            border-radius: 10px;
+            color: var(--text-light);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem;
+            text-align: center;
+            letter-spacing: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .pin-input:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 20px rgba(74, 144, 226, 0.3);
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--light-blue) 100%);
+            color: white;
+            font-family: 'Orbitron', monospace;
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(74, 144, 226, 0.5);
+        }
+
+        .error-message {
+            color: #FF6B6B;
+            text-align: center;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .content {
+            display: none;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 60px 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+            animation: slideDown 0.8s ease-out;
+        }
+
+        .main-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 3.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #5DADE2 0%, #FFFFFF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 8px;
+            margin-bottom: 15px;
+            animation: glow 3s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.2); }
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            color: var(--light-blue);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .dashboard-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .dashboard-btn {
+            background: linear-gradient(135deg, rgba(10, 35, 66, 0.9) 0%, rgba(27, 38, 59, 0.7) 100%);
+            border: 2px solid #5DADE2;
+            border-radius: 20px;
+            padding: 40px;
+            text-decoration: none;
+            display: block;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .dashboard-btn:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(93, 173, 226, 0.3);
+        }
+
+        .btn-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .btn-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #5DADE2;
+            margin-bottom: 15px;
+        }
+
+        .btn-description {
+            font-size: 1rem;
+            color: var(--pale-blue);
+            line-height: 1.6;
+        }
+
+        .aircraft-card {
+            background: linear-gradient(135deg, rgba(10, 35, 66, 0.9) 0%, rgba(27, 38, 59, 0.7) 100%);
+            border: 2px solid #5DADE2;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 100%;
+            margin: 0 auto 40px;
+            transition: all 0.3s ease;
+        }
+
+        .aircraft-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .aircraft-name {
+            font-family: 'Orbitron', monospace;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #5DADE2;
+        }
+
+        .aircraft-badge {
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: rgba(74, 144, 226, 0.2);
+            color: var(--light-blue);
+            border: 1px solid var(--secondary);
+        }
+
+        .aircraft-info {
+            font-size: 1.1rem;
+            color: var(--pale-blue);
+            margin-bottom: 15px;
+            line-height: 2;
+        }
+
+        .aircraft-info strong {
+            color: var(--text-light);
+            font-weight: 700;
+        }
+
+        .aircraft-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .stat-box {
+            background: rgba(74, 144, 226, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(74, 144, 226, 0.2);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--pale-blue);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-light);
+        }
+
+        .logout-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: rgba(230, 57, 70, 0.8);
+            color: white;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            z-index: 100;
+        }
+
+        .logout-btn:hover {
+            background: rgba(230, 57, 70, 1);
+        }
+
+        .footer {
+            margin-top: 100px;
+            padding-top: 40px;
+            border-top: 1px solid rgba(74, 144, 226, 0.3);
+            text-align: center;
+            font-size: 0.9rem;
+            color: rgba(224, 225, 221, 0.6);
+        }
+
+        @media (max-width: 768px) {
+            .aircraft-name { font-size: 2rem; }
+            .main-title { font-size: 2.5rem; letter-spacing: 4px; }
+        }
+        
+        /* COMPLIANCE WIDGET STYLES */
+        .compliance-widget { background: rgba(27, 38, 59, 0.95); border-radius: 15px; padding: 30px; margin: 40px 0; border: 1px solid var(--secondary); }
+        .compliance-widget h2 { color: var(--secondary); margin-bottom: 20px; font-size: 1.8rem; }
+        .compliance-scroll { overflow-x: auto; margin-top: 20px; }
+        .compliance-table { width: 100%; border-collapse: collapse; min-width: 1400px; }
+        .compliance-table th { background: var(--primary); color: var(--secondary); padding: 10px 6px; text-align: center; font-weight: 700; font-size: 0.7rem; border: 1px solid rgba(74, 144, 226, 0.3); }
+        .compliance-table th.aircraft-col { text-align: left; padding-left: 15px; min-width: 100px; }
+        .compliance-table td { padding: 8px 6px; text-align: center; border: 1px solid rgba(74, 144, 226, 0.2); }
+        .compliance-table td.aircraft-col { text-align: left; padding-left: 15px; font-weight: 700; font-size: 1rem; color: var(--secondary); }
+        .compliance-table tr:hover { background: rgba(74, 144, 226, 0.1); }
+        .comp-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; display: inline-block; min-width: 80px; cursor: pointer; transition: all 0.2s; }
+        .comp-badge:hover { transform: scale(1.05); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+        .comp-expired { background: #E63946; color: white; }
+        .comp-warning { background: #FFC000; color: #0A2342; }
+        .comp-caution { background: #FFA726; color: white; }
+        .comp-ok { background: #70AD47; color: white; }
+        .comp-permanent { background: #6B7280; color: white; }
+        .comp-missing { background: transparent; color: var(--text-light); opacity: 0.5; border: 1px dashed rgba(133, 193, 233, 0.3); }
+        .comp-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 10000; justify-content: center; align-items: center; }
+        .comp-modal-content { background: var(--bg-light); padding: 40px; border-radius: 15px; max-width: 600px; width: 90%; border: 2px solid var(--secondary); }
+        .comp-modal .form-group { margin: 20px 0; }
+        .comp-modal label { display: block; margin-bottom: 8px; color: var(--secondary); font-weight: 600; }
+        .comp-modal input { width: 100%; padding: 12px; background: var(--bg-dark); border: 2px solid var(--secondary); color: white; border-radius: 8px; font-size: 1rem; }
+        .comp-modal .btn { padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; color: white; transition: all 0.3s; }
+    </style>
+</head>
+<body>
+    <div class="login-container" id="loginContainer">
+        <div class="login-box">
+            <div class="login-title">HIGHVELD</div>
+            <div class="login-subtitle">Aircraft Portal Access</div>
+            
+            <div class="input-group">
+                <label class="input-label">Enter Access PIN</label>
+                <input type="password" class="pin-input" id="pinInput" maxlength="6" placeholder="● ● ● ● ● ●" autocomplete="off">
+            </div>
+            
+            <button class="login-button" onclick="checkPin()">ACCESS PORTAL</button>
+            
+            <div class="error-message" id="errorMessage">
+                ✗ Invalid PIN. Please try again.
+            </div>
+        </div>
+    </div>
+
+    <div class="content" id="content">
+        <button class="logout-btn" onclick="logout()">Logout</button>
+        
+        <div class="logo-container" style="text-align: center; margin-bottom: 30px;">
+            <svg width="280" height="70" viewBox="0 0 300 80" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto;">
+                <circle cx="40" cy="40" r="35" fill="#4A90E2" opacity="0.2"/>
+                <circle cx="40" cy="40" r="32" fill="none" stroke="#4A90E2" stroke-width="2"/>
+                <g transform="translate(40, 40)">
+                    <path d="M -8 -4 L 8 0 L -8 4 Z" fill="#4A90E2"/>
+                    <path d="M -12 -8 L -4 -2 L -4 2 L -12 8 L -10 0 Z" fill="#85C1E9"/>
+                    <circle cx="0" cy="0" r="2" fill="#FFFFFF"/>
+                </g>
+                <text x="85" y="45" font-family="'Orbitron', Arial, sans-serif" font-size="28" font-weight="900" fill="url(#blueGradient)">FlyWatch</text>
+                <text x="235" y="45" font-family="'Orbitron', Arial, sans-serif" font-size="28" font-weight="900" fill="#4A90E2">.AI</text>
+                <text x="85" y="62" font-family="'Rajdhani', Arial, sans-serif" font-size="11" font-weight="600" fill="#85C1E9" letter-spacing="2">AVIATION MANAGEMENT SOLUTION</text>
+                <defs>
+                    <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:#4472C4;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#85C1E9;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+            </svg>
+        </div>
+        
+        <div class="header">
+            <div class="main-title">HIGHVELD MUSHROOMS</div>
+            <div class="subtitle">Aircraft Fleet Management</div>
+        </div>
+
+        <div class="aircraft-card">
+            <div class="aircraft-header">
+                <div class="aircraft-name">ZS-AAM</div>
+                <div class="aircraft-badge">Operational</div>
+            </div>
+            <div class="aircraft-info">
+                <strong>Model:</strong> Beechcraft Premier 1A<br>
+                <strong>Owner:</strong> Highveld Mushrooms<br>
+                <strong>Status:</strong> Engine 2 trend monitoring active
+            </div>
+            <div class="aircraft-stats">
+                <div class="stat-box">
+                    <div class="stat-label">Total Flights</div>
+                    <div class="stat-value">202</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Service Years</div>
+                    <div class="stat-value">10 yrs</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Avg ITT</div>
+                    <div class="stat-value">730°C</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Data Range</div>
+                    <div class="stat-value">2016-26</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-buttons">
+            <a href="folio-system.html?aircraft=ZS-AAM" class="dashboard-btn">
+                <div class="btn-icon">📝</div>
+                <div class="btn-title">Flight Folios</div>
+                <div class="btn-description">Enter and manage flight data, legs, and TREND parameters</div>
+            </a>
+
+            <a href="ZS-AAM_A4_infographic.html" class="dashboard-btn">
+                <div class="btn-icon">📄</div>
+                <div class="btn-title">A4 Summary Dashboard</div>
+                <div class="btn-description">Compact one-page view with key metrics (print-ready)</div>
+            </a>
+
+            <a href="highveld_trend_infographic.html" class="dashboard-btn">
+                <div class="btn-icon">📊</div>
+                <div class="btn-title">TREND Analysis & Charts</div>
+                <div class="btn-description">Detailed engine performance charts and trend analysis</div>
+            </a>
+        </div>
+
+        <!-- COMPLIANCE DASHBOARD WIDGET -->
+        <div id="complianceWidget"></div>
+
+        <div class="footer">
+            <div>Highveld Mushrooms Aviation Division | FlyWatch AI Monitoring</div>
+        </div>
+    </div>
+
+    <script>
+        // PIN for Highveld Mushrooms: HVM2024
+        const CORRECT_PIN = 'HVM2024';
+        
+        // Check if already logged in
+        if (sessionStorage.getItem('highveld_auth') === 'true') {
+            showContent();
+        }
+        
+        // Allow Enter key to submit
+        document.getElementById('pinInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkPin();
+            }
+        });
+        
+        function checkPin() {
+            const enteredPin = document.getElementById('pinInput').value;
+            const errorMessage = document.getElementById('errorMessage');
+            
+            if (enteredPin === CORRECT_PIN) {
+                sessionStorage.setItem('highveld_auth', 'true');
+                showContent();
+            } else {
+                errorMessage.style.display = 'block';
+                document.getElementById('pinInput').value = '';
+                document.getElementById('pinInput').focus();
+                
+                // Shake animation
+                document.querySelector('.login-box').style.animation = 'shake 0.5s';
+                setTimeout(() => {
+                    document.querySelector('.login-box').style.animation = '';
+                }, 500);
+            }
+        }
+        
+        function showContent() {
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+        }
+        
+        function logout() {
+            sessionStorage.removeItem('highveld_auth');
+            window.location.href = 'index.html';
+        }
+    </script>
+    
+    <!-- COMPLIANCE WIDGET -->
+    <script src="aircraft-config-data.js"></script>
+    <script src="compliance-widget-v2.js"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', function() {
+            // Initialize compliance widget for Highveld
+            setTimeout(() => {
+                if (typeof initComplianceWidget === 'function') {
+                    initComplianceWidget('highveld');
+                }
+            }, 500);
+        });
+    </script>
+    
+    <style>
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+    </style>
+</body>
+</html>
