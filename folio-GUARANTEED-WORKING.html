@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flight Folio - FlyWatch</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #0D1B2A; color: #E0E1DD; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; background: #1B263B; padding: 30px; border-radius: 10px; }
+        h1 { color: #4A90E2; margin-bottom: 20px; }
+        .btn { padding: 10px 20px; background: #4A90E2; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 5px; font-size: 14px; font-weight: 600; }
+        .btn:hover { background: #357ABD; }
+        .btn-calc { background: #70AD47; padding: 8px 16px; font-size: 13px; }
+        .btn-success { background: #70AD47; }
+        .btn-danger { background: #E63946; }
+        .form-group { margin: 15px 0; }
+        label { display: block; margin-bottom: 5px; color: #85C1E9; font-weight: 600; }
+        input, select { width: 100%; padding: 10px; background: #0D1B2A; border: 1px solid #4A90E2; color: white; border-radius: 5px; font-size: 14px; }
+        input:read-only { background: #1a3a1a; color: #70AD47; font-weight: 700; font-size: 16px; }
+        .leg-panel { background: #0A2342; padding: 20px; margin: 15px 0; border-radius: 8px; border-left: 4px solid #4A90E2; }
+        .leg-title { font-size: 18px; font-weight: 700; color: #85C1E9; margin-bottom: 15px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr 1fr 0.7fr 0.7fr; gap: 15px; align-items: end; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #4A90E2; }
+        th { background: #0A2342; color: #85C1E9; font-weight: 700; }
+        tr:hover { background: rgba(74, 144, 226, 0.1); }
+        .dropdown { position: absolute; background: #0D1B2A; border: 2px solid #4A90E2; max-height: 250px; overflow-y: auto; z-index: 2000; width: 100%; display: none; border-radius: 0 0 8px 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+        .dropdown-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #4A90E2; }
+        .dropdown-item:hover { background: #4A90E2; }
+        .dropdown-code { font-weight: 700; color: #85C1E9; font-family: monospace; font-size: 16px; }
+        .dropdown-name { color: #AED6F1; font-size: 13px; margin-top: 4px; }
+        .show { display: block !important; }
+        .hide { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✈️ Flight Folio - <span id="aircraftName"></span></h1>
+        
+        <div id="listView">
+            <button class="btn" onclick="openNew()">+ New Folio</button>
+            <table>
+                <thead>
+                    <tr><th>ID</th><th>Date</th><th>Aircraft</th><th>Route</th><th>Legs</th><th>Distance</th><th>Actions</th></tr>
+                </thead>
+                <tbody id="folioList"></tbody>
+            </table>
+        </div>
+
+        <div id="editorView" class="hide">
+            <h2 id="editorTitle">Create New Folio</h2>
+            <div class="grid" style="grid-template-columns: repeat(4, 1fr);">
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" id="date">
+                </div>
+                <div class="form-group">
+                    <label>Aircraft</label>
+                    <select id="aircraft"></select>
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="status">
+                        <option>SCHEDULED</option>
+                        <option>COMPLETED</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Folio #</label>
+                    <input type="text" id="folioNo">
+                </div>
+            </div>
+
+            <h3 style="margin-top: 25px; color: #85C1E9;">Flight Legs</h3>
+            <div id="legsContainer"></div>
+            <button class="btn" onclick="addLeg()">+ Add Leg</button>
+            
+            <div style="margin-top: 25px;">
+                <button class="btn btn-success" onclick="save()">💾 Save Folio</button>
+                <button class="btn btn-danger" onclick="closeEditor()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+console.log('%c=== FOLIO SYSTEM STARTING ===', 'background: #4A90E2; color: white; padding: 5px;');
+
+const AIRCRAFT = {
+    barrick: [
+        {reg: 'ZS-BGM', model: 'King Air 200'},
+        {reg: 'ZS-BGO', model: 'King Air 200'},
+        {reg: 'ZS-CGO', model: 'King Air 200'},
+        {reg: 'ZS-KGM', model: 'Cessna Caravan 208'}
+    ],
+    highveld: [{reg: 'ZS-AAM', model: 'Beechcraft Premier 1A'}],
+    mccormick: [{reg: 'ZS-MPT', model: 'Super King Air B300'}]
+};
+
+const AIRPORTS = [
+    {icao:'FALA',iata:'HLA',name:'Lanseria',city:'Johannesburg',lat:-25.9385,lon:27.9261},
+    {icao:'FAOR',iata:'JNB',name:'OR Tambo',city:'Johannesburg',lat:-26.1392,lon:28.2460},
+    {icao:'FACT',iata:'CPT',name:'Cape Town',city:'Cape Town',lat:-33.9715,lon:18.6021},
+    {icao:'FADN',iata:'DUR',name:'King Shaka',city:'Durban',lat:-29.6144,lon:31.1197},
+    {icao:'FAPE',iata:'PLZ',name:'Port Elizabeth',city:'Port Elizabeth',lat:-33.9849,lon:25.6173},
+    {icao:'FABL',iata:'BFN',name:'Bloemfontein',city:'Bloemfontein',lat:-29.0927,lon:26.3024},
+    {icao:'FAGM',iata:'GRJ',name:'George',city:'George',lat:-34.0056,lon:22.3789},
+    {icao:'HKJK',iata:'NBO',name:'Jomo Kenyatta',city:'Nairobi',lat:-1.3192,lon:36.9278},
+    {icao:'HECA',iata:'CAI',name:'Cairo',city:'Cairo',lat:30.1219,lon:31.4056},
+    {icao:'HAAB',iata:'ADD',name:'Addis Ababa',city:'Addis Ababa',lat:8.9779,lon:38.7993},
+    {icao:'DNMM',iata:'LOS',name:'Lagos',city:'Lagos',lat:6.5774,lon:3.3212}
+];
+
+let currentOrg = 'barrick';
+let currentAircraft = 'ZS-BGM';
+let folios = [];
+let legCount = 0;
+let editingFolioId = null;
+
+window.onload = function() {
+    const params = new URLSearchParams(window.location.search);
+    currentAircraft = params.get('aircraft') || 'ZS-BGM';
+    
+    if (currentAircraft.includes('BGM') || currentAircraft.includes('BGO') || currentAircraft.includes('CGO') || currentAircraft.includes('KGM')) {
+        currentOrg = 'barrick';
+    } else if (currentAircraft.includes('MPT')) {
+        currentOrg = 'mccormick';
+    } else {
+        currentOrg = 'highveld';
+    }
+    
+    console.log('%c✓ Org: ' + currentOrg + ' | Aircraft: ' + currentAircraft, 'color: #70AD47');
+    console.log('%c✓ Airports: ' + AIRPORTS.length, 'color: #70AD47');
+    
+    document.getElementById('aircraftName').textContent = currentAircraft;
+    
+    loadFolios();
+    renderList();
+};
+
+function loadFolios() {
+    const stored = localStorage.getItem('folios_' + currentOrg);
+    folios = stored ? JSON.parse(stored) : [];
+    console.log('%c✓ Loaded ' + folios.length + ' folios', 'color: #70AD47');
+}
+
+function renderList() {
+    const tbody = document.getElementById('folioList');
+    tbody.innerHTML = '';
+    
+    if (folios.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;">No folios yet. Click "New Folio".</td></tr>';
+        return;
+    }
+    
+    folios.forEach(f => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><strong>${f.id}</strong></td>
+            <td>${f.date}</td>
+            <td><strong style="color:#4A90E2;">${f.aircraft}</strong></td>
+            <td>${f.route}</td>
+            <td>${f.legs.length}</td>
+            <td><strong style="color:#70AD47;">${f.totalDist} NM</strong></td>
+            <td>
+                <button class="btn" style="padding:6px 12px;" onclick="editFolio('${f.id}')">✎ Edit</button>
+                <button class="btn btn-danger" style="padding:6px 12px;" onclick="deleteFolio('${f.id}')">Delete</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function openNew() {
+    editingFolioId = null;
+    document.getElementById('editorTitle').textContent = 'Create New Folio';
+    
+    document.getElementById('listView').classList.add('hide');
+    document.getElementById('editorView').classList.remove('hide');
+    
+    document.getElementById('date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('folioNo').value = 'F' + Date.now();
+    
+    const select = document.getElementById('aircraft');
+    select.innerHTML = '';
+    AIRCRAFT[currentOrg].forEach(ac => {
+        const opt = document.createElement('option');
+        opt.value = ac.reg;
+        opt.textContent = ac.reg + ' - ' + ac.model;
+        select.appendChild(opt);
+    });
+    select.value = currentAircraft;
+    
+    legCount = 0;
+    document.getElementById('legsContainer').innerHTML = '';
+    addLeg();
+}
+
+function editFolio(id) {
+    console.log('%cEDITING: ' + id, 'background: #FFC000; color: black; padding: 5px;');
+    
+    editingFolioId = id;
+    const folio = folios.find(f => f.id === id);
+    if (!folio) return;
+    
+    document.getElementById('editorTitle').textContent = 'Edit Folio: ' + id;
+    document.getElementById('listView').classList.add('hide');
+    document.getElementById('editorView').classList.remove('hide');
+    
+    document.getElementById('date').value = folio.date;
+    document.getElementById('folioNo').value = folio.id;
+    document.getElementById('status').value = folio.status;
+    
+    const select = document.getElementById('aircraft');
+    select.innerHTML = '';
+    AIRCRAFT[currentOrg].forEach(ac => {
+        const opt = document.createElement('option');
+        opt.value = ac.reg;
+        opt.textContent = ac.reg + ' - ' + ac.model;
+        select.appendChild(opt);
+    });
+    select.value = folio.aircraft;
+    
+    legCount = 0;
+    document.getElementById('legsContainer').innerHTML = '';
+    
+    folio.legs.forEach(leg => {
+        addLeg();
+        document.getElementById('from' + legCount).value = leg.from;
+        document.getElementById('to' + legCount).value = leg.to;
+        document.getElementById('unit' + legCount).value = leg.unit;
+        document.getElementById('dist' + legCount).value = leg.dist;
+    });
+}
+
+function addLeg() {
+    legCount++;
+    
+    let prevTo = '';
+    if (legCount > 1) {
+        const prev = document.getElementById('to' + (legCount - 1));
+        if (prev && prev.value) {
+            prevTo = prev.value;
+            console.log('%c✓ Chaining leg ' + legCount + ' FROM: ' + prevTo, 'color: #85C1E9');
+        }
+    }
+    
+    const div = document.createElement('div');
+    div.className = 'leg-panel';
+    div.innerHTML = `
+        <div class="leg-title">Leg ${legCount}</div>
+        <div class="grid">
+            <div class="form-group" style="position:relative;">
+                <label>From Airport</label>
+                <input type="text" id="from${legCount}" value="${prevTo}" placeholder="FALA or JNB" style="text-transform:uppercase;">
+                <div id="fromList${legCount}" class="dropdown"></div>
+            </div>
+            <div class="form-group" style="position:relative;">
+                <label>To Airport</label>
+                <input type="text" id="to${legCount}" placeholder="FACT or CPT" style="text-transform:uppercase;">
+                <div id="toList${legCount}" class="dropdown"></div>
+            </div>
+            <div class="form-group">
+                <label>Unit</label>
+                <select id="unit${legCount}">
+                    <option value="NM">NM</option>
+                    <option value="KM">KM</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Distance</label>
+                <input type="number" id="dist${legCount}" readonly value="0">
+            </div>
+            <div class="form-group">
+                <label>&nbsp;</label>
+                <button class="btn btn-calc" onclick="calc(${legCount}); return false;">📏 Calc</button>
+            </div>
+        </div>
+    `;
+    document.getElementById('legsContainer').appendChild(div);
+    
+    // ATTACH EVENTS
+    const fromInput = document.getElementById('from' + legCount);
+    const toInput = document.getElementById('to' + legCount);
+    
+    fromInput.addEventListener('input', function() { search(legCount, 'from'); });
+    toInput.addEventListener('input', function() { search(legCount, 'to'); });
+    
+    fromInput.addEventListener('blur', function() { 
+        setTimeout(() => hide(legCount, 'from'), 200);
+    });
+    toInput.addEventListener('blur', function() { 
+        setTimeout(() => hide(legCount, 'to'), 200);
+    });
+    
+    document.getElementById('unit' + legCount).addEventListener('change', function() { calc(legCount); });
+}
+
+function search(leg, field) {
+    const input = document.getElementById(field + leg);
+    const query = input.value.toUpperCase().trim();
+    const list = document.getElementById(field + 'List' + leg);
+    
+    if (query.length < 2) {
+        list.classList.remove('show');
+        return;
+    }
+    
+    const results = AIRPORTS.filter(a => 
+        a.icao.includes(query) || 
+        (a.iata && a.iata.includes(query)) || 
+        a.name.toUpperCase().includes(query)
+    );
+    
+    console.log('Search "' + query + '": ' + results.length + ' results');
+    
+    list.innerHTML = '';
+    results.slice(0, 8).forEach(ap => {
+        const item = document.createElement('div');
+        item.className = 'dropdown-item';
+        item.innerHTML = `<div class="dropdown-code">${ap.icao}${ap.iata ? '/' + ap.iata : ''}</div><div class="dropdown-name">${ap.name} - ${ap.city}</div>`;
+        item.onclick = function() {
+            input.value = ap.icao;
+            list.classList.remove('show');
+            console.log('%c✓ Selected: ' + ap.icao + ' - ' + ap.name, 'color: #70AD47');
+            calc(leg);
+        };
+        list.appendChild(item);
+    });
+    
+    list.classList.add('show');
+}
+
+function hide(leg, field) {
+    const list = document.getElementById(field + 'List' + leg);
+    list.classList.remove('show');
+}
+
+function calc(leg) {
+    console.log('%c=== CALCULATING LEG ' + leg + ' ===', 'background: #FFC000; color: black; padding: 5px;');
+    
+    const fromInput = document.getElementById('from' + leg);
+    const toInput = document.getElementById('to' + leg);
+    const unitInput = document.getElementById('unit' + leg);
+    const distInput = document.getElementById('dist' + leg);
+    
+    const from = fromInput.value.toUpperCase().trim();
+    const to = toInput.value.toUpperCase().trim();
+    const unit = unitInput.value;
+    
+    console.log('FROM:', from);
+    console.log('TO:', to);
+    console.log('UNIT:', unit);
+    
+    if (!from || !to) {
+        console.log('%c✗ Missing FROM or TO', 'color: #E63946');
+        return;
+    }
+    
+    const ap1 = AIRPORTS.find(a => a.icao === from || a.iata === from);
+    const ap2 = AIRPORTS.find(a => a.icao === to || a.iata === to);
+    
+    if (!ap1) {
+        console.log('%c✗ Airport NOT FOUND: ' + from, 'color: #E63946');
+        alert('Airport not found: ' + from);
+        return;
+    }
+    if (!ap2) {
+        console.log('%c✗ Airport NOT FOUND: ' + to, 'color: #E63946');
+        alert('Airport not found: ' + to);
+        return;
+    }
+    
+    console.log('✓ FROM Airport:', ap1.name, '(' + ap1.lat + ', ' + ap1.lon + ')');
+    console.log('✓ TO Airport:', ap2.name, '(' + ap2.lat + ', ' + ap2.lon + ')');
+    
+    // HAVERSINE
+    const R = unit === 'NM' ? 3440.065 : 6371;
+    const lat1 = ap1.lat * Math.PI / 180;
+    const lat2 = ap2.lat * Math.PI / 180;
+    const dLat = (ap2.lat - ap1.lat) * Math.PI / 180;
+    const dLon = (ap2.lon - ap1.lon) * Math.PI / 180;
+    
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1) * Math.cos(lat2) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const dist = Math.round(R * c);
+    
+    distInput.value = dist;
+    console.log('%c✓✓✓ DISTANCE: ' + dist + ' ' + unit + ' ✓✓✓', 'background: #70AD47; color: white; padding: 5px; font-weight: bold;');
+}
+
+function save() {
+    const legs = [];
+    for (let i = 1; i <= legCount; i++) {
+        const from = document.getElementById('from' + i);
+        const to = document.getElementById('to' + i);
+        if (from && to && from.value && to.value) {
+            legs.push({
+                from: from.value,
+                to: to.value,
+                dist: document.getElementById('dist' + i).value,
+                unit: document.getElementById('unit' + i).value
+            });
+        }
+    }
+    
+    const folio = {
+        id: editingFolioId || document.getElementById('folioNo').value,
+        date: document.getElementById('date').value,
+        aircraft: document.getElementById('aircraft').value,
+        status: document.getElementById('status').value,
+        legs: legs,
+        route: legs.map(l => l.from + '→' + l.to).join(', '),
+        totalDist: legs.reduce((sum, l) => sum + parseInt(l.dist || 0), 0)
+    };
+    
+    console.log('%c=== SAVING FOLIO ===', 'background: #4A90E2; color: white; padding: 5px;');
+    console.log(folio);
+    
+    if (editingFolioId) {
+        const idx = folios.findIndex(f => f.id === editingFolioId);
+        if (idx >= 0) {
+            folios[idx] = folio;
+            console.log('%c✓ UPDATED', 'color: #70AD47');
+        }
+    } else {
+        folios.push(folio);
+        console.log('%c✓ ADDED NEW', 'color: #70AD47');
+    }
+    
+    localStorage.setItem('folios_' + currentOrg, JSON.stringify(folios));
+    
+    alert('✅ Folio saved!');
+    closeEditor();
+    renderList();
+}
+
+function closeEditor() {
+    document.getElementById('listView').classList.remove('hide');
+    document.getElementById('editorView').classList.add('hide');
+}
+
+function deleteFolio(id) {
+    if (confirm('Delete folio ' + id + '?')) {
+        folios = folios.filter(f => f.id !== id);
+        localStorage.setItem('folios_' + currentOrg, JSON.stringify(folios));
+        renderList();
+        console.log('%c✓ DELETED: ' + id, 'color: #E63946');
+    }
+}
+</script>
+</body>
+</html>
