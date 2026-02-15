@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flight Folio Management | FlyWatch.AI</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #0D1B2A; color: #E0E1DD; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; background: #1B263B; padding: 30px; border-radius: 10px; }
+        h1 { color: #4A90E2; margin-bottom: 20px; }
+        .btn { padding: 10px 20px; background: #4A90E2; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        .btn:hover { background: #357ABD; }
+        .btn-danger { background: #E63946; }
+        .form-group { margin: 15px 0; }
+        label { display: block; margin-bottom: 5px; color: #85C1E9; }
+        input, select { width: 100%; padding: 10px; background: #0D1B2A; border: 1px solid #4A90E2; color: white; border-radius: 5px; }
+        .leg-panel { background: #0A2342; padding: 20px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #4A90E2; }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #4A90E2; }
+        th { background: #0A2342; color: #85C1E9; }
+        .dropdown { position: absolute; background: #1B263B; border: 2px solid #4A90E2; max-height: 200px; overflow-y: auto; z-index: 1000; width: 100%; display: none; }
+        .dropdown-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #4A90E2; }
+        .dropdown-item:hover { background: #4A90E2; }
+        .show { display: block !important; }
+        .hide { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✈️ Flight Folio Management - <span id="aircraftName"></span></h1>
+        
+        <!-- LIST VIEW -->
+        <div id="listView">
+            <button class="btn" onclick="openNew()">+ New Folio</button>
+            <table>
+                <thead>
+                    <tr><th>ID</th><th>Date</th><th>Aircraft</th><th>Route</th><th>Legs</th><th>Distance</th><th>Action</th></tr>
+                </thead>
+                <tbody id="folioList"></tbody>
+            </table>
+        </div>
+
+        <!-- EDITOR VIEW -->
+        <div id="editorView" class="hide">
+            <h2>New Folio</h2>
+            
+            <div class="grid">
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" id="date">
+                </div>
+                <div class="form-group">
+                    <label>Aircraft</label>
+                    <select id="aircraft"></select>
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="status">
+                        <option>SCHEDULED</option>
+                        <option>COMPLETED</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Folio No</label>
+                    <input type="text" id="folioNo">
+                </div>
+            </div>
+
+            <h3 style="margin-top: 20px;">Legs</h3>
+            <div id="legsContainer"></div>
+            <button class="btn" onclick="addLeg()">+ Add Leg</button>
+            
+            <div style="margin-top: 20px;">
+                <button class="btn" onclick="save()">💾 Save</button>
+                <button class="btn btn-danger" onclick="closeEditor()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+// EMBEDDED DATA - AIRCRAFT
+const AIRCRAFT = {
+    barrick: [
+        {reg: 'ZS-BGM', model: 'King Air 200'},
+        {reg: 'ZS-BGO', model: 'King Air 200'},
+        {reg: 'ZS-CGO', model: 'King Air 200'},
+        {reg: 'ZS-KGM', model: 'Cessna Caravan 208'}
+    ],
+    highveld: [{reg: 'ZS-AAM', model: 'Beechcraft Premier 1A'}],
+    mccormick: [{reg: 'ZS-MPT', model: 'Super King Air B300'}]
+};
+
+// EMBEDDED DATA - AIRPORTS (Top 50 African)
+const AIRPORTS = [
+    {icao:'FALA',iata:'HLA',name:'Lanseria',city:'Johannesburg',lat:-25.94,lon:27.93},
+    {icao:'FAOR',iata:'JNB',name:'OR Tambo',city:'Johannesburg',lat:-26.14,lon:28.25},
+    {icao:'FACT',iata:'CPT',name:'Cape Town',city:'Cape Town',lat:-33.97,lon:18.60},
+    {icao:'FADN',iata:'DUR',name:'King Shaka',city:'Durban',lat:-29.61,lon:31.12},
+    {icao:'FAPE',iata:'PLZ',name:'Port Elizabeth',city:'Port Elizabeth',lat:-33.98,lon:25.62},
+    {icao:'FABL',iata:'BFN',name:'Bloemfontein',city:'Bloemfontein',lat:-29.09,lon:26.30},
+    {icao:'HKJK',iata:'NBO',name:'Jomo Kenyatta',city:'Nairobi',lat:-1.32,lon:36.93},
+    {icao:'HECA',iata:'CAI',name:'Cairo',city:'Cairo',lat:30.12,lon:31.41},
+    {icao:'HAAB',iata:'ADD',name:'Addis Ababa',city:'Addis Ababa',lat:8.98,lon:38.80},
+    {icao:'DNMM',iata:'LOS',name:'Lagos',city:'Lagos',lat:6.58,lon:3.32}
+];
+
+// STATE
+let currentOrg = 'barrick';
+let currentAircraft = 'ZS-BGM';
+let folios = [];
+let legCount = 0;
+
+// INIT
+window.onload = function() {
+    const params = new URLSearchParams(window.location.search);
+    currentAircraft = params.get('aircraft') || 'ZS-BGM';
+    
+    if (currentAircraft.includes('BGM') || currentAircraft.includes('BGO') || currentAircraft.includes('CGO') || currentAircraft.includes('KGM')) {
+        currentOrg = 'barrick';
+    } else if (currentAircraft.includes('MPT')) {
+        currentOrg = 'mccormick';
+    } else {
+        currentOrg = 'highveld';
+    }
+    
+    document.getElementById('aircraftName').textContent = currentAircraft;
+    
+    loadFolios();
+    renderList();
+    
+    console.log('✅ LOADED - Org:', currentOrg, 'Aircraft:', currentAircraft);
+};
+
+function loadFolios() {
+    const stored = localStorage.getItem('folios_' + currentOrg);
+    folios = stored ? JSON.parse(stored) : [];
+    console.log('Loaded', folios.length, 'folios');
+}
+
+function renderList() {
+    const tbody = document.getElementById('folioList');
+    tbody.innerHTML = '';
+    
+    if (folios.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;">No folios yet</td></tr>';
+        return;
+    }
+    
+    folios.forEach(f => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${f.id}</td>
+            <td>${f.date}</td>
+            <td>${f.aircraft}</td>
+            <td>${f.route}</td>
+            <td>${f.legs.length}</td>
+            <td>${f.totalDist} NM</td>
+            <td><button class="btn" onclick="deleteFolio('${f.id}')">Delete</button></td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function openNew() {
+    document.getElementById('listView').classList.add('hide');
+    document.getElementById('editorView').classList.remove('hide');
+    
+    document.getElementById('date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('folioNo').value = 'F' + Date.now();
+    
+    // POPULATE AIRCRAFT DROPDOWN
+    const select = document.getElementById('aircraft');
+    select.innerHTML = '<option value="">Select Aircraft</option>';
+    
+    const acList = AIRCRAFT[currentOrg] || [];
+    console.log('Loading aircraft for', currentOrg, ':', acList);
+    
+    acList.forEach(ac => {
+        const opt = document.createElement('option');
+        opt.value = ac.reg;
+        opt.textContent = ac.reg + ' - ' + ac.model;
+        select.appendChild(opt);
+    });
+    
+    select.value = currentAircraft;
+    
+    // ADD FIRST LEG
+    legCount = 0;
+    document.getElementById('legsContainer').innerHTML = '';
+    addLeg();
+}
+
+function addLeg() {
+    legCount++;
+    const div = document.createElement('div');
+    div.className = 'leg-panel';
+    div.innerHTML = `
+        <h4>Leg ${legCount}</h4>
+        <div class="grid">
+            <div class="form-group" style="position:relative;">
+                <label>From</label>
+                <input type="text" id="from${legCount}" onkeyup="searchAirport(${legCount},'from')" placeholder="FALA" style="text-transform:uppercase;">
+                <div id="fromList${legCount}" class="dropdown"></div>
+            </div>
+            <div class="form-group" style="position:relative;">
+                <label>To</label>
+                <input type="text" id="to${legCount}" onkeyup="searchAirport(${legCount},'to')" placeholder="FACT" style="text-transform:uppercase;">
+                <div id="toList${legCount}" class="dropdown"></div>
+            </div>
+            <div class="form-group">
+                <label>Distance (auto)</label>
+                <input type="number" id="dist${legCount}" readonly value="0">
+            </div>
+            <div class="form-group">
+                <label>Unit</label>
+                <select id="unit${legCount}" onchange="calcDist(${legCount})">
+                    <option>NM</option>
+                    <option>KM</option>
+                </select>
+            </div>
+        </div>
+    `;
+    document.getElementById('legsContainer').appendChild(div);
+}
+
+function searchAirport(leg, field) {
+    const input = document.getElementById(field + leg);
+    const query = input.value.toUpperCase();
+    const list = document.getElementById(field + 'List' + leg);
+    
+    if (query.length < 2) {
+        list.classList.remove('show');
+        return;
+    }
+    
+    const results = AIRPORTS.filter(a => 
+        a.icao.includes(query) || 
+        (a.iata && a.iata.includes(query)) || 
+        a.name.toUpperCase().includes(query)
+    );
+    
+    console.log('Search', query, 'found', results.length);
+    
+    list.innerHTML = '';
+    results.slice(0, 8).forEach(ap => {
+        const item = document.createElement('div');
+        item.className = 'dropdown-item';
+        item.textContent = ap.icao + ' - ' + ap.name + ' (' + ap.city + ')';
+        item.onclick = function() {
+            input.value = ap.icao;
+            list.classList.remove('show');
+            calcDist(leg);
+        };
+        list.appendChild(item);
+    });
+    
+    list.classList.add('show');
+}
+
+function calcDist(leg) {
+    const from = document.getElementById('from' + leg).value;
+    const to = document.getElementById('to' + leg).value;
+    const unit = document.getElementById('unit' + leg).value;
+    
+    if (from.length < 4 || to.length < 4) return;
+    
+    const ap1 = AIRPORTS.find(a => a.icao === from);
+    const ap2 = AIRPORTS.find(a => a.icao === to);
+    
+    if (!ap1 || !ap2) return;
+    
+    // Haversine formula
+    const R = unit === 'NM' ? 3440.065 : 6371;
+    const lat1 = ap1.lat * Math.PI / 180;
+    const lat2 = ap2.lat * Math.PI / 180;
+    const dLat = (ap2.lat - ap1.lat) * Math.PI / 180;
+    const dLon = (ap2.lon - ap1.lon) * Math.PI / 180;
+    
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1) * Math.cos(lat2) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const dist = Math.round(R * c);
+    
+    document.getElementById('dist' + leg).value = dist;
+    console.log('Distance', from, 'to', to, '=', dist, unit);
+}
+
+function save() {
+    const legs = [];
+    for (let i = 1; i <= legCount; i++) {
+        const from = document.getElementById('from' + i);
+        const to = document.getElementById('to' + i);
+        if (from && to && from.value && to.value) {
+            legs.push({
+                from: from.value,
+                to: to.value,
+                dist: document.getElementById('dist' + i).value,
+                unit: document.getElementById('unit' + i).value
+            });
+        }
+    }
+    
+    const folio = {
+        id: document.getElementById('folioNo').value,
+        date: document.getElementById('date').value,
+        aircraft: document.getElementById('aircraft').value,
+        status: document.getElementById('status').value,
+        legs: legs,
+        route: legs.map(l => l.from + '-' + l.to).join(', '),
+        totalDist: legs.reduce((sum, l) => sum + parseInt(l.dist || 0), 0)
+    };
+    
+    console.log('SAVING:', folio);
+    
+    folios.push(folio);
+    localStorage.setItem('folios_' + currentOrg, JSON.stringify(folios));
+    
+    alert('✅ Folio saved!');
+    closeEditor();
+    renderList();
+}
+
+function closeEditor() {
+    document.getElementById('listView').classList.remove('hide');
+    document.getElementById('editorView').classList.add('hide');
+}
+
+function deleteFolio(id) {
+    if (confirm('Delete folio ' + id + '?')) {
+        folios = folios.filter(f => f.id !== id);
+        localStorage.setItem('folios_' + currentOrg, JSON.stringify(folios));
+        renderList();
+    }
+}
+</script>
+</body>
+</html>
