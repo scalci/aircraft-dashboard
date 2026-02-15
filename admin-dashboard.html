@@ -425,6 +425,12 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a href="#" class="nav-link" onclick="showSection('aircraft')">
+                    <span class="nav-icon">✈️</span>
+                    <span>Aircraft Configuration</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a href="#" class="nav-link" onclick="showSection('users')">
                     <span class="nav-icon">👥</span>
                     <span>User Management</span>
@@ -539,6 +545,51 @@
             </div>
         </div>
 
+        <!-- AIRCRAFT CONFIGURATION SECTION -->
+        <div id="section-aircraft" class="page-section">
+            <div class="content-card">
+                <div class="card-header">
+                    <h2 class="card-title">Aircraft Configuration</h2>
+                    <button class="btn btn-success" onclick="openAddAircraftModal()">+ Add Aircraft</button>
+                </div>
+
+                <div class="search-filter-bar">
+                    <input type="text" class="search-input" id="searchAircraft" placeholder="Search aircraft..." onkeyup="filterAircraft()">
+                    <select class="filter-select" id="filterOrg" onchange="filterAircraft()">
+                        <option value="">All Organizations</option>
+                        <option value="highveld">Highveld</option>
+                        <option value="mccormick">McCormick</option>
+                        <option value="barrick">Barrick</option>
+                    </select>
+                    <select class="filter-select" id="filterActive" onchange="filterAircraft()">
+                        <option value="">All Status</option>
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table class="picklist-table">
+                        <thead>
+                            <tr>
+                                <th>Organization</th>
+                                <th>Registration</th>
+                                <th>Model</th>
+                                <th>Category</th>
+                                <th>Engines</th>
+                                <th>Fuel Type</th>
+                                <th style="text-align: center;">Active</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="aircraftTableBody">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- OTHER SECTIONS (Placeholders) -->
         <div id="section-users" class="page-section">
             <div class="content-card">
@@ -573,6 +624,115 @@
                 <h2 class="card-title">System Settings</h2>
                 <p style="color: var(--pale-blue); margin-top: 20px;">System settings interface coming soon...</p>
             </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Aircraft Modal -->
+    <div id="aircraftModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="aircraftModalTitle">Add New Aircraft</h2>
+            </div>
+            
+            <form id="aircraftForm" onsubmit="saveAircraft(event)">
+                <div class="form-group">
+                    <label class="form-label">Organization</label>
+                    <select class="form-input" id="aircraftOrg" required>
+                        <option value="highveld">Highveld Mushrooms</option>
+                        <option value="mccormick">McCormick</option>
+                        <option value="barrick">Barrick Aviation</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Registration</label>
+                    <input type="text" class="form-input" id="aircraftRegistration" required placeholder="e.g., ZS-AAM" style="text-transform: uppercase;">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Model</label>
+                    <input type="text" class="form-input" id="aircraftModel" required placeholder="e.g., Beechcraft King Air B300">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Serial Number</label>
+                    <input type="text" class="form-input" id="aircraftSerial" placeholder="Optional">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select class="form-input" id="aircraftCategory">
+                        <option value="Jet">Jet</option>
+                        <option value="Turboprop">Turboprop</option>
+                        <option value="Piston">Piston</option>
+                        <option value="Helicopter">Helicopter</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Number of Engines</label>
+                    <input type="number" class="form-input" id="aircraftEngines" min="1" max="4" value="2">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Fuel Type</label>
+                    <select class="form-input" id="aircraftFuelType">
+                        <option value="JETA-1">JETA-1</option>
+                        <option value="AVGAS">AVGAS</option>
+                        <option value="MOGAS">MOGAS</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Oil Unit</label>
+                    <select class="form-input" id="aircraftOilUnit">
+                        <option value="QT">QT</option>
+                        <option value="LT">LT</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Fuel Burn Unit</label>
+                    <select class="form-input" id="aircraftFuelBurnUnit">
+                        <option value="KG">KG</option>
+                        <option value="LBS">LBS</option>
+                        <option value="GAL">GAL</option>
+                        <option value="LT">LT</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Fuel Uplift Unit</label>
+                    <select class="form-input" id="aircraftFuelUpliftUnit">
+                        <option value="L">L</option>
+                        <option value="GAL">GAL</option>
+                        <option value="LBS">LBS</option>
+                        <option value="KG">KG</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Cruising Speed (Kts)</label>
+                    <input type="number" class="form-input" id="aircraftCruisingSpeed" value="0">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Fuel Burn Per Hour</label>
+                    <input type="number" class="form-input" id="aircraftFuelBurnHr" value="0">
+                </div>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="aircraftActive" class="checkbox-large" checked>
+                        <label class="form-label" style="margin: 0;">Active</label>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAircraftModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Save Aircraft</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -619,6 +779,8 @@
 
     <!-- Load Picklist Data -->
     <script src="picklists-data.js"></script>
+    <!-- Load Aircraft Config Data -->
+    <script src="aircraft-config-data.js"></script>
     
     <script>
         // Check authentication
@@ -631,13 +793,16 @@
 
         let currentEditEntity = null;
         let currentEditField = null;
+        let currentEditAircraft = null;
 
         // Initialize on load
         window.onload = function() {
             initializePicklists();
+            initializeAircraftDatabase();
             loadDashboardStats();
             loadPicklistTable();
             loadEntityFilter();
+            loadAircraftTable();
         };
 
         function loadDashboardStats() {
@@ -740,6 +905,7 @@
             const titles = {
                 'dashboard': 'Dashboard',
                 'picklists': 'Picklist Management',
+                'aircraft': 'Aircraft Configuration',
                 'users': 'User Management',
                 'organizations': 'Organizations',
                 'compliance': 'Compliance Engine',
@@ -806,6 +972,155 @@
                 loadPicklistTable();
                 loadDashboardStats();
                 alert('Picklist deleted successfully!');
+            }
+        }
+
+        // AIRCRAFT MANAGEMENT FUNCTIONS
+        function loadAircraftTable() {
+            const db = getAllAircraftDatabase();
+            const tbody = document.getElementById('aircraftTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            for (const org in db) {
+                db[org].aircraft.forEach(aircraft => {
+                    const row = createAircraftRow(org, aircraft);
+                    tbody.appendChild(row);
+                });
+            }
+        }
+
+        function createAircraftRow(org, aircraft) {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><strong>${org.charAt(0).toUpperCase() + org.slice(1)}</strong></td>
+                <td><strong>${aircraft.registration}</strong></td>
+                <td>${aircraft.model}</td>
+                <td>${aircraft.category}</td>
+                <td>${aircraft.engines}</td>
+                <td>${aircraft.fuelType}</td>
+                <td class="checkbox-cell">
+                    <input type="checkbox" class="checkbox-large" ${aircraft.active ? 'checked' : ''} disabled>
+                </td>
+                <td class="actions-cell">
+                    <button class="btn btn-secondary btn-small" onclick="editAircraft('${aircraft.registration}')">✎ Edit</button>
+                    <button class="btn btn-primary btn-small" onclick="deleteAircraftConfirm('${aircraft.registration}')">✗ Delete</button>
+                </td>
+            `;
+            return row;
+        }
+
+        function filterAircraft() {
+            const searchText = document.getElementById('searchAircraft')?.value.toLowerCase() || '';
+            const filterOrg = document.getElementById('filterOrg')?.value || '';
+            const filterActive = document.getElementById('filterActive')?.value || '';
+
+            const rows = document.getElementById('aircraftTableBody')?.getElementsByTagName('tr') || [];
+            
+            for (let row of rows) {
+                const org = row.cells[0].textContent.toLowerCase();
+                const reg = row.cells[1].textContent.toLowerCase();
+                const model = row.cells[2].textContent.toLowerCase();
+                const isActive = row.cells[6].querySelector('input').checked;
+
+                const matchesSearch = org.includes(searchText) || reg.includes(searchText) || model.includes(searchText);
+                const matchesOrg = !filterOrg || org.includes(filterOrg);
+                const matchesActive = !filterActive || isActive.toString() === filterActive;
+
+                row.style.display = (matchesSearch && matchesOrg && matchesActive) ? '' : 'none';
+            }
+        }
+
+        function openAddAircraftModal() {
+            currentEditAircraft = null;
+            
+            document.getElementById('aircraftModalTitle').textContent = 'Add New Aircraft';
+            document.getElementById('aircraftOrg').value = 'highveld';
+            document.getElementById('aircraftRegistration').value = '';
+            document.getElementById('aircraftModel').value = '';
+            document.getElementById('aircraftSerial').value = '';
+            document.getElementById('aircraftCategory').value = 'Turboprop';
+            document.getElementById('aircraftEngines').value = '2';
+            document.getElementById('aircraftFuelType').value = 'JETA-1';
+            document.getElementById('aircraftOilUnit').value = 'QT';
+            document.getElementById('aircraftFuelBurnUnit').value = 'KG';
+            document.getElementById('aircraftFuelUpliftUnit').value = 'L';
+            document.getElementById('aircraftCruisingSpeed').value = '0';
+            document.getElementById('aircraftFuelBurnHr').value = '0';
+            document.getElementById('aircraftActive').checked = true;
+            
+            document.getElementById('aircraftModal').classList.add('active');
+        }
+
+        function editAircraft(registration) {
+            currentEditAircraft = registration;
+            
+            const aircraft = getAircraftByRegistration(registration);
+            if (!aircraft) return;
+            
+            const org = getAircraftOrgKey(registration);
+            
+            document.getElementById('aircraftModalTitle').textContent = 'Edit Aircraft';
+            document.getElementById('aircraftOrg').value = org;
+            document.getElementById('aircraftRegistration').value = aircraft.registration;
+            document.getElementById('aircraftModel').value = aircraft.model;
+            document.getElementById('aircraftSerial').value = aircraft.serialNumber || '';
+            document.getElementById('aircraftCategory').value = aircraft.category;
+            document.getElementById('aircraftEngines').value = aircraft.engines;
+            document.getElementById('aircraftFuelType').value = aircraft.fuelType;
+            document.getElementById('aircraftOilUnit').value = aircraft.oilUnit;
+            document.getElementById('aircraftFuelBurnUnit').value = aircraft.fuelBurnUnit;
+            document.getElementById('aircraftFuelUpliftUnit').value = aircraft.fuelUpliftUnit;
+            document.getElementById('aircraftCruisingSpeed').value = aircraft.cruisingSpeed;
+            document.getElementById('aircraftFuelBurnHr').value = aircraft.fuelBurnPerHour;
+            document.getElementById('aircraftActive').checked = aircraft.active;
+            
+            document.getElementById('aircraftModal').classList.add('active');
+        }
+
+        function closeAircraftModal() {
+            document.getElementById('aircraftModal').classList.remove('active');
+        }
+
+        function saveAircraft(event) {
+            event.preventDefault();
+            
+            const aircraftData = {
+                registration: document.getElementById('aircraftRegistration').value.trim().toUpperCase(),
+                model: document.getElementById('aircraftModel').value.trim(),
+                serialNumber: document.getElementById('aircraftSerial').value.trim(),
+                category: document.getElementById('aircraftCategory').value,
+                engines: parseInt(document.getElementById('aircraftEngines').value),
+                fuelType: document.getElementById('aircraftFuelType').value,
+                oilUnit: document.getElementById('aircraftOilUnit').value,
+                fuelBurnUnit: document.getElementById('aircraftFuelBurnUnit').value,
+                fuelUpliftUnit: document.getElementById('aircraftFuelUpliftUnit').value,
+                cruisingSpeed: parseInt(document.getElementById('aircraftCruisingSpeed').value),
+                fuelBurnPerHour: parseInt(document.getElementById('aircraftFuelBurnHr').value),
+                active: document.getElementById('aircraftActive').checked
+            };
+            
+            const org = document.getElementById('aircraftOrg').value;
+            
+            if (currentEditAircraft) {
+                // Update existing
+                updateAircraft(currentEditAircraft, aircraftData);
+            } else {
+                // Add new
+                addAircraft(org, aircraftData);
+            }
+            
+            loadAircraftTable();
+            closeAircraftModal();
+            
+            alert('Aircraft saved successfully!');
+        }
+
+        function deleteAircraftConfirm(registration) {
+            if (confirm(`Are you sure you want to delete aircraft:\n\n${registration}\n\nThis action cannot be undone.`)) {
+                deleteAircraft(registration);
+                loadAircraftTable();
+                alert('Aircraft deleted successfully!');
             }
         }
 

@@ -62,26 +62,45 @@ function getAllAirports() {
     return stored ? JSON.parse(stored) : AIRPORTS_DATABASE;
 }
 
-// Search airports by ICAO, IATA, or name
+// Enhanced search - searches ICAO, IATA, name, and city
 function searchAirports(query) {
+    if (!query || query.length < 2) return [];
+    
     const airports = getAllAirports();
     const q = query.toUpperCase();
+    
     return airports.filter(airport => 
         airport.icao.toUpperCase().includes(q) ||
         (airport.iata && airport.iata.toUpperCase().includes(q)) ||
         airport.name.toUpperCase().includes(q) ||
         airport.city.toUpperCase().includes(q)
-    );
+    ).slice(0, 25); // Limit to 25 results
 }
 
-// Get airport by ICAO code
+// Get airport by ICAO code (exact match)
 function getAirportByICAO(icao) {
+    if (!icao) return null;
     const airports = getAllAirports();
     return airports.find(a => a.icao.toUpperCase() === icao.toUpperCase());
 }
 
+// Get airport by IATA code (exact match)
+function getAirportByIATA(iata) {
+    if (!iata) return null;
+    const airports = getAllAirports();
+    return airports.find(a => a.iata && a.iata.toUpperCase() === iata.toUpperCase());
+}
+
+// Get airport by any code (tries ICAO first, then IATA)
+function getAirportByCode(code) {
+    if (!code) return null;
+    return getAirportByICAO(code) || getAirportByIATA(code);
+}
+
 // Calculate distance between two airports (Great Circle Distance - Haversine formula)
 function calculateDistance(airport1, airport2, unit = 'NM') {
+    if (!airport1 || !airport2) return null;
+    
     const R = 3440.065; // Earth's radius in nautical miles
     
     const lat1 = airport1.lat * Math.PI / 180;
@@ -107,10 +126,10 @@ function calculateDistance(airport1, airport2, unit = 'NM') {
     return Math.round(distance);
 }
 
-// Calculate distance between two ICAO codes
-function calculateDistanceByICAO(fromICAO, toICAO, unit = 'NM') {
-    const airport1 = getAirportByICAO(fromICAO);
-    const airport2 = getAirportByICAO(toICAO);
+// Calculate distance between two airport codes (ICAO or IATA)
+function calculateDistanceByCode(fromCode, toCode, unit = 'NM') {
+    const airport1 = getAirportByCode(fromCode);
+    const airport2 = getAirportByCode(toCode);
     
     if (!airport1 || !airport2) {
         return null;
@@ -119,9 +138,59 @@ function calculateDistanceByICAO(fromICAO, toICAO, unit = 'NM') {
     return calculateDistance(airport1, airport2, unit);
 }
 
-// Get formatted airport label for dropdowns
+// Get formatted airport label for dropdowns (with smart formatting)
 function getAirportLabel(airport) {
-    return `${airport.icao}${airport.iata ? '/' + airport.iata : ''} - ${airport.name} (${airport.city})`;
+    if (!airport) return '';
+    
+    const codes = airport.iata ? 
+        `${airport.icao}/${airport.iata}` : 
+        airport.icao;
+    
+    return `${codes} - ${airport.name} (${airport.city})`;
+}
+
+// Get short airport label (just codes and city)
+function getAirportShortLabel(airport) {
+    if (!airport) return '';
+    
+    const codes = airport.iata ? 
+        `${airport.icao}/${airport.iata}` : 
+        airport.icao;
+    
+    return `${codes} - ${airport.city}`;
+}
+
+// Validate airport code (returns airport if valid, null if not)
+function validateAirportCode(code) {
+    if (!code || code.length < 3) return null;
+    return getAirportByCode(code);
+}
+
+// Add or update airport in database
+function upsertAirport(airportData) {
+    const airports = getAllAirports();
+    const index = airports.findIndex(a => a.icao.toUpperCase() === airportData.icao.toUpperCase());
+    
+    if (index !== -1) {
+        airports[index] = airportData;
+    } else {
+        airports.push(airportData);
+    }
+    
+    localStorage.setItem('flywatch_airports', JSON.stringify(airports));
+    return true;
+}
+
+// Delete airport from database
+function deleteAirport(icao) {
+    const airports = getAllAirports();
+    const filtered = airports.filter(a => a.icao.toUpperCase() !== icao.toUpperCase());
+    
+    if (filtered.length < airports.length) {
+        localStorage.setItem('flywatch_airports', JSON.stringify(filtered));
+        return true;
+    }
+    return false;
 }
 
 // Export for use in other scripts
@@ -132,8 +201,14 @@ if (typeof module !== 'undefined' && module.exports) {
         getAllAirports,
         searchAirports,
         getAirportByICAO,
+        getAirportByIATA,
+        getAirportByCode,
         calculateDistance,
-        calculateDistanceByICAO,
-        getAirportLabel
+        calculateDistanceByCode,
+        getAirportLabel,
+        getAirportShortLabel,
+        validateAirportCode,
+        upsertAirport,
+        deleteAirport
     };
 }
