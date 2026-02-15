@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZS-KGM Engine Health | Barrick Aviation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @page {
+            size: A4;
+            margin: 0;
+        }
+
+        @media print {
+            body {
+                width: 210mm;
+                height: 297mm;
+            }
+        }
+
+        :root {
+            --primary: #0A2342;
+            --secondary: #4A90E2;
+            --aircraft-color: #FFC000;
+            --light-blue: #85C1E9;
+            --pale-blue: #AED6F1;
+            --bg-dark: #0D1B2A;
+            --bg-light: #1B263B;
+            --text-light: #E0E1DD;
+            --grid-color: rgba(74, 144, 226, 0.15);
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, var(--primary) 100%);
+            color: var(--text-light);
+            width: 210mm;
+            height: 297mm;
+            position: relative;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 49px, var(--grid-color) 49px, var(--grid-color) 50px),
+                repeating-linear-gradient(90deg, transparent, transparent 49px, var(--grid-color) 49px, var(--grid-color) 50px);
+            opacity: 0.3;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 210mm;
+            height: 297mm;
+            margin: 0 auto;
+            padding: 15mm 12mm;
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-breadcrumb {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--pale-blue);
+            margin-bottom: 10px;
+        }
+
+        .nav-breadcrumb a {
+            color: var(--light-blue);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .nav-breadcrumb a:hover {
+            color: white;
+        }
+
+        .data-quality-banner {
+            background: linear-gradient(135deg, rgba(174, 214, 241, 0.15) 0%, rgba(133, 193, 233, 0.08) 100%);
+            border: 2px solid var(--pale-blue);
+            border-radius: 12px;
+            padding: 8px 20px;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .data-quality-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--pale-blue);
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .aircraft-id {
+            font-family: 'Orbitron', monospace;
+            font-size: 2.8rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--aircraft-color) 0%, #FFFFFF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 6px;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: var(--light-blue);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .owner {
+            font-size: 0.8rem;
+            color: rgba(224, 225, 221, 0.7);
+            letter-spacing: 1px;
+        }
+
+        .mission-status {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 6px 20px;
+            background: rgba(74, 144, 226, 0.15);
+            border: 2px solid var(--secondary);
+            border-radius: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            letter-spacing: 1px;
+            color: var(--light-blue);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--bg-light) 0%, rgba(27, 38, 59, 0.8) 100%);
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(74, 144, 226, 0.3);
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.65rem;
+            color: var(--pale-blue);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-light);
+        }
+
+        .stat-unit {
+            font-size: 0.7rem;
+            color: rgba(224, 225, 221, 0.6);
+            margin-left: 3px;
+        }
+
+        .section-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--secondary);
+            margin: 15px 0 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            padding-bottom: 8px;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 2px;
+            background: linear-gradient(90deg, var(--secondary), transparent);
+        }
+
+        .engine-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .engine-panel {
+            background: linear-gradient(135deg, rgba(10, 35, 66, 0.9) 0%, rgba(27, 38, 59, 0.7) 100%);
+            border: 2px solid;
+            border-radius: 12px;
+            padding: 15px;
+        }
+
+        .engine-panel.engine-1 { border-color: #5DADE2; }
+        .engine-panel.engine-2 { border-color: #85C1E9; }
+
+        .engine-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .engine-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .engine-1 .engine-title { color: #5DADE2; }
+        .engine-2 .engine-title { color: #85C1E9; }
+
+        .engine-status {
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: rgba(74, 144, 226, 0.2);
+            color: var(--light-blue);
+            border: 1px solid var(--secondary);
+        }
+
+        .parameter-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(74, 144, 226, 0.2);
+        }
+
+        .parameter-row:last-child { border-bottom: none; }
+
+        .param-name {
+            font-size: 0.75rem;
+            color: var(--pale-blue);
+            font-weight: 600;
+        }
+
+        .param-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-light);
+        }
+
+        .trend-stable {
+            color: var(--light-blue);
+            margin-left: 6px;
+            font-size: 0.9rem;
+        }
+
+        .footer {
+            margin-top: auto;
+            padding-top: 15px;
+            border-top: 1px solid rgba(74, 144, 226, 0.3);
+            text-align: center;
+            font-size: 0.7rem;
+            color: rgba(224, 225, 221, 0.6);
+        }
+
+        .timestamp {
+            font-family: 'JetBrains Mono', monospace;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav-breadcrumb">
+            <a href="index.html">FlyWatch AI</a> / <a href="index.html#barrick">Barrick Fleet</a> / ZS-KGM
+        </div>
+
+        <div class="data-quality-banner">
+            <div class="data-quality-text">UPDATED: Feb 2026 | 905 Flights | 2013-2026</div>
+        </div>
+
+        <div class="header">
+            <div class="aircraft-id">ZS-KGM</div>
+            <div class="subtitle">Textron Cessna Caravan 208</div>
+            <div class="owner">Barrick Aviation Fleet</div>
+            <div class="mission-status">● OPERATIONAL</div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Flights</div>
+                <div class="stat-value">905</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Data Range</div>
+                <div class="stat-value">13<span class="stat-unit">yrs</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Avg ITT</div>
+                <div class="stat-value">693<span class="stat-unit">°C</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Avg Oil P</div>
+                <div class="stat-value">119<span class="stat-unit">PSI</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Status</div>
+                <div class="stat-value" style="font-size: 1rem; color: #85C1E9;">Active</div>
+            </div>
+        </div>
+
+        <div class="section-title">Engine Performance Analysis</div>
+        
+        <div class="engine-grid">
+            <div class="engine-panel engine-1">
+                <div class="engine-header">
+                    <div class="engine-title">ENGINE 1</div>
+                    <div class="engine-status">NORMAL</div>
+                </div>
+                
+                <div class="parameter-row">
+                    <span class="param-name">Turbine Temp (ITT)</span>
+                    <span class="param-value">714<span class="stat-unit">°C</span> <span class="trend-stable">●</span></span>
+                </div>
+                
+                <div class="parameter-row">
+                    <span class="param-name">Oil Pressure</span>
+                    <span class="param-value">118<span class="stat-unit">PSI</span> <span class="trend-stable">●</span></span>
+                </div>
+                
+                <div class="parameter-row">
+                    <span class="param-name">Status</span>
+                    <span class="param-value" style="color: #85C1E9;">Healthy</span>
+                </div>
+            </div>
+
+            <div class="engine-panel engine-2">
+                <div class="engine-header">
+                    <div class="engine-title">ENGINE 2</div>
+                    <div class="engine-status">NORMAL</div>
+                </div>
+                
+                <div class="parameter-row">
+                    <span class="param-name">Turbine Temp (ITT)</span>
+                    <span class="param-value">702<span class="stat-unit">°C</span> <span class="trend-stable">●</span></span>
+                </div>
+                
+                <div class="parameter-row">
+                    <span class="param-name">Oil Pressure</span>
+                    <span class="param-value">119<span class="stat-unit">PSI</span> <span class="trend-stable">●</span></span>
+                </div>
+                
+                <div class="parameter-row">
+                    <span class="param-name">Status</span>
+                    <span class="param-value" style="color: #85C1E9;">Healthy</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-title">Performance Metrics</div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">ITT Differential</div>
+                <div class="stat-value">12<span class="stat-unit">°C</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Oil P Diff</div>
+                <div class="stat-value">1<span class="stat-unit">PSI</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Fleet Rank</div>
+                <div class="stat-value">3<span class="stat-unit">/4</span></div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div>Barrick Aviation | ZS-KGM TREND Monitoring</div>
+            <div class="timestamp">Report Updated: February 2026 | 905 Flights | All Systems Operational</div>
+        </div>
+    </div>
+</body>
+</html>
