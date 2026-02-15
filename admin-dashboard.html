@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlyWatch.AI Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --primary: #0A2342;
+            --secondary: #4A90E2;
+            --admin-accent: #E63946;
+            --success: #70AD47;
+            --warning: #FFC000;
+            --light-blue: #85C1E9;
+            --pale-blue: #AED6F1;
+            --bg-dark: #0D1B2A;
+            --bg-light: #1B263B;
+            --text-light: #E0E1DD;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: linear-gradient(135deg, #1a0a0f 0%, var(--primary) 100%);
+            color: var(--text-light);
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: linear-gradient(180deg, rgba(10, 35, 66, 0.95) 0%, rgba(27, 38, 59, 0.9) 100%);
+            border-right: 2px solid var(--admin-accent);
+            padding: 30px 20px;
+            overflow-y: auto;
+        }
+
+        .logo-small {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.8rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--admin-accent) 0%, #FFFFFF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .admin-label {
+            background: var(--admin-accent);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: inline-block;
+            margin-bottom: 30px;
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 10px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 15px;
+            color: var(--pale-blue);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: rgba(230, 57, 70, 0.2);
+            color: white;
+            border-left: 3px solid var(--admin-accent);
+        }
+
+        .nav-icon {
+            font-size: 1.2rem;
+        }
+
+        .main-content {
+            margin-left: 280px;
+            padding: 30px;
+        }
+
+        .top-bar {
+            background: rgba(10, 35, 66, 0.8);
+            padding: 20px 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--admin-accent);
+        }
+
+        .page-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 2rem;
+            color: white;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--admin-accent) 0%, #c62828 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: rgba(74, 144, 226, 0.2);
+            color: var(--light-blue);
+            border: 1px solid var(--secondary);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(230, 57, 70, 0.4);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(27, 38, 59, 0.8);
+            padding: 25px;
+            border-radius: 12px;
+            border: 2px solid var(--admin-accent);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            font-family: 'Orbitron', monospace;
+            color: var(--admin-accent);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--pale-blue);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 5px;
+        }
+
+        .content-card {
+            background: rgba(27, 38, 59, 0.8);
+            border-radius: 12px;
+            border: 1px solid rgba(230, 57, 70, 0.3);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(230, 57, 70, 0.3);
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .search-filter-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 250px;
+            padding: 12px 18px;
+            background: rgba(13, 27, 42, 0.8);
+            border: 1px solid rgba(230, 57, 70, 0.3);
+            border-radius: 8px;
+            color: var(--text-light);
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--admin-accent);
+            box-shadow: 0 0 15px rgba(230, 57, 70, 0.3);
+        }
+
+        .filter-select {
+            padding: 12px 18px;
+            background: rgba(13, 27, 42, 0.8);
+            border: 1px solid rgba(230, 57, 70, 0.3);
+            border-radius: 8px;
+            color: var(--text-light);
+            font-family: 'Rajdhani', sans-serif;
+            min-width: 200px;
+        }
+
+        .picklist-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .picklist-table th {
+            background: rgba(10, 35, 66, 0.95);
+            padding: 15px;
+            text-align: left;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+            border-bottom: 2px solid var(--admin-accent);
+        }
+
+        .picklist-table td {
+            padding: 15px;
+            border-bottom: 1px solid rgba(230, 57, 70, 0.2);
+        }
+
+        .picklist-table tr:hover {
+            background: rgba(230, 57, 70, 0.1);
+        }
+
+        .values-cell {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            max-width: 400px;
+            word-wrap: break-word;
+        }
+
+        .checkbox-cell {
+            text-align: center;
+        }
+
+        .checkbox-large {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .actions-cell {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, rgba(10, 35, 66, 0.98) 0%, rgba(27, 38, 59, 0.95) 100%);
+            border: 2px solid var(--admin-accent);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            margin-bottom: 25px;
+        }
+
+        .modal-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.8rem;
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: var(--pale-blue);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(13, 27, 42, 0.8);
+            border: 1px solid rgba(230, 57, 70, 0.3);
+            border-radius: 8px;
+            color: var(--text-light);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1rem;
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-input:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--admin-accent);
+            box-shadow: 0 0 15px rgba(230, 57, 70, 0.3);
+        }
+
+        .form-hint {
+            font-size: 0.85rem;
+            color: rgba(224, 225, 221, 0.6);
+            margin-top: 5px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            justify-content: flex-end;
+        }
+
+        .page-section {
+            display: none;
+        }
+
+        .page-section.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <div class="logo-small">FlyWatch.AI</div>
+        <div class="admin-label">ADMIN</div>
+        
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a href="#" class="nav-link active" onclick="showSection('dashboard')">
+                    <span class="nav-icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" onclick="showSection('picklists')">
+                    <span class="nav-icon">📋</span>
+                    <span>Picklist Management</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" onclick="showSection('users')">
+                    <span class="nav-icon">👥</span>
+                    <span>User Management</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" onclick="showSection('organizations')">
+                    <span class="nav-icon">🏢</span>
+                    <span>Organizations</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" onclick="showSection('compliance')">
+                    <span class="nav-icon">✓</span>
+                    <span>Compliance Engine</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" onclick="showSection('audit')">
+                    <span class="nav-icon">📝</span>
+                    <span>Audit Logs</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" onclick="showSection('settings')">
+                    <span class="nav-icon">⚙</span>
+                    <span>System Settings</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="top-bar">
+            <div class="page-title" id="pageTitle">Dashboard</div>
+            <div class="user-info">
+                <span id="adminUsername"></span>
+                <button class="btn btn-primary btn-small" onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <!-- DASHBOARD SECTION -->
+        <div id="section-dashboard" class="page-section active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="statPicklists">0</div>
+                    <div class="stat-label">Total Picklists</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statEntities">0</div>
+                    <div class="stat-label">Entities</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statOrganizations">3</div>
+                    <div class="stat-label">Organizations</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statUsers">12</div>
+                    <div class="stat-label">Active Users</div>
+                </div>
+            </div>
+
+            <div class="content-card">
+                <div class="card-header">
+                    <h2 class="card-title">Quick Actions</h2>
+                </div>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <button class="btn btn-primary" onclick="showSection('picklists')">Manage Picklists</button>
+                    <button class="btn btn-secondary" onclick="showSection('users')">Manage Users</button>
+                    <button class="btn btn-secondary" onclick="showSection('organizations')">Manage Organizations</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PICKLIST MANAGEMENT SECTION -->
+        <div id="section-picklists" class="page-section">
+            <div class="content-card">
+                <div class="card-header">
+                    <h2 class="card-title">Picklist Management</h2>
+                    <button class="btn btn-success" onclick="openAddPicklistModal()">+ Add Picklist</button>
+                </div>
+
+                <div class="search-filter-bar">
+                    <input type="text" class="search-input" id="searchPicklist" placeholder="Search picklists..." onkeyup="filterPicklists()">
+                    <select class="filter-select" id="filterEntity" onchange="filterPicklists()">
+                        <option value="">All Entities</option>
+                    </select>
+                    <select class="filter-select" id="filterOverride" onchange="filterPicklists()">
+                        <option value="">All Override Settings</option>
+                        <option value="true">Can Override</option>
+                        <option value="false">Cannot Override</option>
+                    </select>
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table class="picklist-table">
+                        <thead>
+                            <tr>
+                                <th>Entity</th>
+                                <th>Field</th>
+                                <th>Values</th>
+                                <th style="text-align: center;">Can Override</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="picklistTableBody">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- OTHER SECTIONS (Placeholders) -->
+        <div id="section-users" class="page-section">
+            <div class="content-card">
+                <h2 class="card-title">User Management</h2>
+                <p style="color: var(--pale-blue); margin-top: 20px;">User management interface coming soon...</p>
+            </div>
+        </div>
+
+        <div id="section-organizations" class="page-section">
+            <div class="content-card">
+                <h2 class="card-title">Organization Management</h2>
+                <p style="color: var(--pale-blue); margin-top: 20px;">Organization management interface coming soon...</p>
+            </div>
+        </div>
+
+        <div id="section-compliance" class="page-section">
+            <div class="content-card">
+                <h2 class="card-title">Compliance Engine Configuration</h2>
+                <p style="color: var(--pale-blue); margin-top: 20px;">Compliance engine configuration coming soon...</p>
+            </div>
+        </div>
+
+        <div id="section-audit" class="page-section">
+            <div class="content-card">
+                <h2 class="card-title">Audit Logs</h2>
+                <p style="color: var(--pale-blue); margin-top: 20px;">Audit log viewer coming soon...</p>
+            </div>
+        </div>
+
+        <div id="section-settings" class="page-section">
+            <div class="content-card">
+                <h2 class="card-title">System Settings</h2>
+                <p style="color: var(--pale-blue); margin-top: 20px;">System settings interface coming soon...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Picklist Modal -->
+    <div id="picklistModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Add New Picklist</h2>
+            </div>
+            
+            <form id="picklistForm" onsubmit="savePicklist(event)">
+                <div class="form-group">
+                    <label class="form-label">Entity</label>
+                    <input type="text" class="form-input" id="picklistEntity" required placeholder="e.g., aircraft, crewLogbook">
+                    <div class="form-hint">The module or context (aircraft, crew, managedDocuments, etc.)</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Field</label>
+                    <input type="text" class="form-input" id="picklistField" required placeholder="e.g., fuelType, commandType">
+                    <div class="form-hint">The specific field name</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Values (pipe-separated)</label>
+                    <textarea class="form-textarea" id="picklistValues" required placeholder="Value1|Value2|Value3"></textarea>
+                    <div class="form-hint">Separate values with | (pipe character)</div>
+                </div>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="picklistCanOverride" class="checkbox-large">
+                        <label class="form-label" style="margin: 0;">Organizations can override this picklist</label>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closePicklistModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Save Picklist</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Load Picklist Data -->
+    <script src="picklists-data.js"></script>
+    
+    <script>
+        // Check authentication
+        if (sessionStorage.getItem('admin_auth') !== 'true') {
+            window.location.href = 'admin-login.html';
+        }
+
+        // Display admin username
+        document.getElementById('adminUsername').textContent = sessionStorage.getItem('admin_user') || 'Admin';
+
+        let currentEditEntity = null;
+        let currentEditField = null;
+
+        // Initialize on load
+        window.onload = function() {
+            initializePicklists();
+            loadDashboardStats();
+            loadPicklistTable();
+            loadEntityFilter();
+        };
+
+        function loadDashboardStats() {
+            const picklists = getAllPicklists();
+            let totalPicklists = 0;
+            const entities = new Set();
+
+            for (const entity in picklists) {
+                entities.add(entity);
+                totalPicklists += Object.keys(picklists[entity]).length;
+            }
+
+            document.getElementById('statPicklists').textContent = totalPicklists;
+            document.getElementById('statEntities').textContent = entities.size;
+        }
+
+        function loadEntityFilter() {
+            const entities = getAllEntities();
+            const filterSelect = document.getElementById('filterEntity');
+            
+            entities.forEach(entity => {
+                const option = document.createElement('option');
+                option.value = entity;
+                option.textContent = entity;
+                filterSelect.appendChild(option);
+            });
+        }
+
+        function loadPicklistTable() {
+            const picklists = getAllPicklists();
+            const tbody = document.getElementById('picklistTableBody');
+            tbody.innerHTML = '';
+
+            for (const entity in picklists) {
+                for (const field in picklists[entity]) {
+                    const item = picklists[entity][field];
+                    const row = createPicklistRow(item);
+                    tbody.appendChild(row);
+                }
+            }
+        }
+
+        function createPicklistRow(item) {
+            const row = document.createElement('tr');
+            const valuesText = Array.isArray(item.values) ? item.values.join('|') : item.values;
+            
+            row.innerHTML = `
+                <td>${item.entity}</td>
+                <td><strong>${item.field}</strong></td>
+                <td class="values-cell">${valuesText}</td>
+                <td class="checkbox-cell">
+                    <input type="checkbox" class="checkbox-large" ${item.canOverride ? 'checked' : ''} disabled>
+                </td>
+                <td class="actions-cell">
+                    <button class="btn btn-secondary btn-small" onclick="editPicklist('${item.entity}', '${item.field}')">✎ Edit</button>
+                    <button class="btn btn-primary btn-small" onclick="deletePicklistConfirm('${item.entity}', '${item.field}')">✗ Delete</button>
+                </td>
+            `;
+            
+            return row;
+        }
+
+        function filterPicklists() {
+            const searchText = document.getElementById('searchPicklist').value.toLowerCase();
+            const filterEntity = document.getElementById('filterEntity').value;
+            const filterOverride = document.getElementById('filterOverride').value;
+
+            const rows = document.getElementById('picklistTableBody').getElementsByTagName('tr');
+            
+            for (let row of rows) {
+                const entity = row.cells[0].textContent.toLowerCase();
+                const field = row.cells[1].textContent.toLowerCase();
+                const values = row.cells[2].textContent.toLowerCase();
+                const canOverride = row.cells[3].querySelector('input').checked;
+
+                const matchesSearch = entity.includes(searchText) || field.includes(searchText) || values.includes(searchText);
+                const matchesEntity = !filterEntity || entity === filterEntity.toLowerCase();
+                const matchesOverride = !filterOverride || canOverride.toString() === filterOverride;
+
+                row.style.display = (matchesSearch && matchesEntity && matchesOverride) ? '' : 'none';
+            }
+        }
+
+        function showSection(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('.page-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById('section-' + sectionName).classList.add('active');
+            
+            // Update nav links
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            event.target.closest('.nav-link').classList.add('active');
+            
+            // Update page title
+            const titles = {
+                'dashboard': 'Dashboard',
+                'picklists': 'Picklist Management',
+                'users': 'User Management',
+                'organizations': 'Organizations',
+                'compliance': 'Compliance Engine',
+                'audit': 'Audit Logs',
+                'settings': 'System Settings'
+            };
+            document.getElementById('pageTitle').textContent = titles[sectionName] || 'Admin';
+        }
+
+        function openAddPicklistModal() {
+            currentEditEntity = null;
+            currentEditField = null;
+            
+            document.getElementById('modalTitle').textContent = 'Add New Picklist';
+            document.getElementById('picklistEntity').value = '';
+            document.getElementById('picklistField').value = '';
+            document.getElementById('picklistValues').value = '';
+            document.getElementById('picklistCanOverride').checked = false;
+            
+            document.getElementById('picklistModal').classList.add('active');
+        }
+
+        function editPicklist(entity, field) {
+            currentEditEntity = entity;
+            currentEditField = field;
+            
+            const item = getPicklist(entity, field);
+            if (!item) return;
+            
+            document.getElementById('modalTitle').textContent = 'Edit Picklist';
+            document.getElementById('picklistEntity').value = entity;
+            document.getElementById('picklistField').value = field;
+            document.getElementById('picklistValues').value = Array.isArray(item.values) ? item.values.join('|') : item.values;
+            document.getElementById('picklistCanOverride').checked = item.canOverride;
+            
+            document.getElementById('picklistModal').classList.add('active');
+        }
+
+        function closePicklistModal() {
+            document.getElementById('picklistModal').classList.remove('active');
+        }
+
+        function savePicklist(event) {
+            event.preventDefault();
+            
+            const entity = document.getElementById('picklistEntity').value.trim();
+            const field = document.getElementById('picklistField').value.trim();
+            const values = document.getElementById('picklistValues').value.trim();
+            const canOverride = document.getElementById('picklistCanOverride').checked;
+            
+            updatePicklist(entity, field, values, canOverride);
+            
+            loadPicklistTable();
+            loadDashboardStats();
+            loadEntityFilter();
+            closePicklistModal();
+            
+            alert('Picklist saved successfully!');
+        }
+
+        function deletePicklistConfirm(entity, field) {
+            if (confirm(`Are you sure you want to delete the picklist:\n\nEntity: ${entity}\nField: ${field}\n\nThis action cannot be undone.`)) {
+                deletePicklist(entity, field);
+                loadPicklistTable();
+                loadDashboardStats();
+                alert('Picklist deleted successfully!');
+            }
+        }
+
+        function logout() {
+            sessionStorage.clear();
+            window.location.href = 'admin-login.html';
+        }
+    </script>
+</body>
+</html>
