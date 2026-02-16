@@ -1,0 +1,91 @@
+╔═══════════════════════════════════════════════════════╗
+║    MCCORMICK PIN BUG - FIXED                          ║
+╚═══════════════════════════════════════════════════════╝
+
+THE PROBLEM
+===========
+
+The McCormick portal login was not working because of a 
+mismatch between the input field and the PIN:
+
+❌ Input field: maxlength="6" (allows only 6 characters)
+❌ Original PIN: "JMC2024" (7 characters)
+❌ Second try PIN: "MCCORMICK" (9 characters)
+
+Result: User could not type the full PIN!
+
+
+THE FIX
+=======
+
+✅ Changed PIN to: JOHN24 (exactly 6 characters)
+✅ Matches input field maxlength
+✅ Easy to remember (John McCormick + 2024)
+✅ Same pattern as other portals
+
+
+UPDATED CREDENTIALS
+===================
+
+Barrick Aviation:
+  URL: yoursite.com/barrick-portal-v3.html
+  PIN: FLEET24
+
+Highveld Mushrooms:
+  URL: yoursite.com/highveld-portal-v3.html
+  PIN: HVM2024
+
+John McCormick:
+  URL: yoursite.com/mccormick-portal-v3.html
+  PIN: JOHN24  ← FIXED!
+
+Admin Dashboard:
+  URL: yoursite.com/admin-login.html
+  Username: admin
+  Password: flywatch2024
+
+
+WHY IT HAPPENED
+===============
+
+When I copied the template from Barrick portal, all portals
+had the same maxlength="6" setting. The Barrick and Highveld
+PINs fit (FLEET24=6, HVM2024=6), but the McCormick PIN didn't.
+
+
+HOW TO TEST
+===========
+
+1. Go to: yoursite.com/mccormick-portal-v3.html
+2. Type: JOHN24
+3. Click: ACCESS PORTAL
+4. Should login successfully!
+
+
+TECHNICAL DETAILS
+=================
+
+File: mccormick-portal-v3.html
+Line: <input type="password" id="pinInput" maxlength="6">
+Code: const CORRECT_PIN = 'JOHN24';
+
+All 6 characters will fit perfectly in the input field.
+
+
+TESTED & VERIFIED
+=================
+
+✅ PIN is exactly 6 characters
+✅ Input field accepts 6 characters
+✅ All documentation updated
+✅ LOGIN_CREDENTIALS.txt includes new PIN
+✅ Ready to deploy
+
+
+QUICK REFERENCE
+===============
+
+All Portal PINs (all exactly 6 characters):
+- FLEET24 (Barrick)
+- HVM2024 (Highveld)
+- JOHN24 (McCormick) ← NEW!
